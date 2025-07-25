@@ -6,6 +6,8 @@ from fpdf import FPDF
 import sqlite3
 import os
 from typing import List, Optional
+import markdown as md
+from fastapi.responses import JSONResponse
 
 app = FastAPI()
 DATABASE = "data/weights.db"
@@ -79,6 +81,17 @@ async def delete(delete_ids: Optional[List[str]] = Form(None)):
         conn.commit()
         conn.close()
     return RedirectResponse("/entries", status_code=303)
+
+@app.get("/help/{page}")
+async def get_help(page: str):
+    import os
+    help_file = os.path.join("help", f"{page}.md")
+    if not os.path.isfile(help_file):
+        return JSONResponse({"error": "Help not found"}, status_code=404)
+    with open(help_file, encoding="utf-8") as f:
+        md_content = f.read()
+    html = md.markdown(md_content)
+    return JSONResponse({"html": html})
 
 @app.get("/report")
 async def generate_report():

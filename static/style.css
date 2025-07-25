@@ -138,3 +138,52 @@ td {
 .cancel-btn:hover {
   background: #d4d4d4;
 }
+
+.help-btn {
+  position: absolute;
+  right: 2em;
+  top: 2em;
+  background: #3065d4;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 2.1em;
+  height: 2.1em;
+  font-size: 1.3em;
+  cursor: pointer;
+  z-index: 200;
+}
+
+.help-modal {
+  display: none;
+  position: fixed;
+  z-index: 1001;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.2);
+}
+
+.help-modal-content {
+  background-color: #fff;
+  margin: 5% auto;
+  padding: 2em;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.13);
+  position: relative;
+}
+
+.help-close {
+  color: #aaa;
+  position: absolute;
+  right: 1.2em;
+  top: 1em;
+  font-size: 1.6em;
+  font-weight: bold;
+  cursor: pointer;
+}
+.help-close:hover { color: #3065d4; }

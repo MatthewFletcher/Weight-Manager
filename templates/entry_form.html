@@ -9,6 +9,13 @@
 
 <body>
 	<div class="container">
+		<button id="help-btn" class="help-btn" title="Help">?</button>
+		<div id="help-modal" class="help-modal" style="display:none;">
+			<div class="help-modal-content">
+				<span id="help-close" class="help-close">&times;</span>
+				<div id="help-content">Loading...</div>
+			</div>
+		</div>
 		<h2>Weight Entry Form</h2>
 		<form action="/add" method="post">
 			<table>

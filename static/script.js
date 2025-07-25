@@ -33,3 +33,46 @@ window.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
+
+function showHelp(page) {
+  const modal = document.getElementById('help-modal');
+  const content = document.getElementById('help-content');
+  content.innerHTML = "Loading...";
+  modal.style.display = "block";
+  fetch('/help/' + page)
+    .then(res => res.json())
+    .then(data => {
+      if (data.html) {
+        content.innerHTML = data.html;
+      } else {
+        content.innerHTML = "Help not found.";
+      }
+    }).catch(() => {
+      content.innerHTML = "Error loading help content.";
+    });
+}
+
+window.addEventListener('DOMContentLoaded', function() {
+  // You may want to set this differently per page:
+  let helpPage = "entries"; // or "entry_form" for the form page
+  if (document.getElementById('help-btn')) {
+    if (window.location.pathname.includes("entries")) {
+      helpPage = "entries";
+    } else {
+      helpPage = "entry_form";
+    }
+    document.getElementById('help-btn').onclick = () => showHelp(helpPage);
+  }
+  if (document.getElementById('help-close')) {
+    document.getElementById('help-close').onclick = function () {
+      document.getElementById('help-modal').style.display = "none";
+    };
+  }
+  // Close modal if click outside content
+  window.onclick = function(event) {
+    const modal = document.getElementById('help-modal');
+    if (event.target == modal) {
+      modal.style.display = "none";
+    }
+  }
+});
