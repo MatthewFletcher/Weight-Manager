@@ -1,0 +1,14 @@
+[project]
+name = "weight-manager"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "jinja2",
+    "python-multipart",
+    "markdown",
+    "fpdf2"
+]
