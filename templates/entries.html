@@ -1,43 +1,51 @@
 <!DOCTYPE html>
 <html>
-
 <head>
 	<title>All Entries</title>
 	<link rel="stylesheet" href="/static/style.css">
-	<script src="/static/script.js"></script>
 </head>
-
 <body>
 	<div class="container">
 		<h2>All Entries</h2>
 		<form action="/delete" method="post" onsubmit="return confirmDelete();">
-			<table>
-				<tr>
-					<th></th>
-					<th>Name</th>
-					<th>Room</th>
-					<th>Weights</th>
-					<th>Add Weight</th>
-				</tr>
-				{% for entry in entries %}
-				<tr>
-					<td><input type="checkbox" name="delete_ids" value="{{ entry[0] }}"></td>
-					<td>{{ entry[1] }}</td>
-					<td>{{ entry[2] }}</td>
-					<td>{{ entry[3] }}</td>
-					<td id="add-weight-cell-{{ entry[0] }}" style="vertical-align: middle;">
-						<!-- Placeholder: the Add Weight form for this row will go here -->
-					</td>
-				</tr>
-				{% endfor %}
+			<table id="entries-table">
+				<thead>
+					<tr>
+						<th></th>
+						<th>Name</th>
+						<th data-sort-method="number">Room</th>
+						<th>Weights</th>
+						<th>Add Weight</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for entry in entries %}
+					<tr>
+						<td><input type="checkbox" name="delete_ids" value="{{ entry[0] }}"></td>
+						<td>{{ entry[1] }}</td>
+						<td>{{ entry[2] }}</td>
+						<td>
+							{% set weight_list = entry[3].split(',') if entry[3] else [] %}
+							{% for w in weight_list %}
+								{% if loop.last %}
+									<span style="font-weight: bold; color: #3065d4;">{{ w | int }}</span>
+								{% else %}
+									<span>{{ w | int }}</span>,
+								{% endif %}
+							{% endfor %}
+						</td>
+						<td id="add-weight-cell-{{ entry[0] }}"></td>
+					</tr>
+					{% endfor %}
+				</tbody>
 			</table>
 			<button type="submit">Delete Selected</button>
 		</form>
 
-		<!-- Now render all Add Weight forms outside the Delete form, 
-		     and use a bit of JS to move them into the right cell after the page loads. -->
+		<!-- Render all Add Weight forms OUTSIDE the Delete form, for each entry -->
 		{% for entry in entries %}
-		<form action="/add_weight/{{ entry[0] }}" method="post" id="add-weight-form-{{ entry[0] }}"
+		<form action="/add_weight/{{ entry[0] }}" method="post" 
+			id="add-weight-form-{{ entry[0] }}" class="add-weight-form"
 			style="display:inline-flex; gap:0.5em; align-items:center; margin:0;">
 			<input type="number" name="weight" step="0.1" required placeholder="New weight"
 				style="padding:0.4em; border-radius:4px; border:1px solid #d2d2e6; width:90px;">
@@ -50,10 +58,18 @@
 			<a href="/report">Generate PDF Report</a>
 		</div>
 	</div>
-
-<div id="entry-ids" data-ids="{% for entry in entries %}{{ entry[0] }}{% if not loop.last %},{% endif %}{% endfor %}"></div>
-<script src="/static/script.js"></script>
-
+	<script src="/static/script.js"></script>
+	<script src="/static/tablesort.min.js"></script>
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+			new Tablesort(document.getElementById('entries-table'));
+			// Move Add Weight forms into the right cells
+			{% for entry in entries %}
+				var cell = document.getElementById('add-weight-cell-{{ entry[0] }}');
+				var form = document.getElementById('add-weight-form-{{ entry[0] }}');
+				if (cell && form) cell.appendChild(form);
+			{% endfor %}
+		});
+	</script>
 </body>
-
 </html>

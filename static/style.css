@@ -105,6 +105,16 @@ button:hover {
 .add-weight-btn:hover {
   background: #3065d4;
 }
+.add-weight-form {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  margin: 0;
+  vertical-align: middle;
+}
+td {
+  vertical-align: middle;
+}
 .save-btn {
   background: #43d17d;
   color: white;
