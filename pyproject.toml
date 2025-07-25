@@ -12,3 +12,17 @@ dependencies = [
     "markdown",
     "fpdf2"
 ]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "httpx",
+    "pytest-asyncio"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"

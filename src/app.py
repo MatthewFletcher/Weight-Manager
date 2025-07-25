@@ -9,11 +9,24 @@ from typing import List, Optional
 import markdown as md
 from fastapi.responses import JSONResponse
 from datetime import datetime
+import os
+from fastapi import FastAPI
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SRC_DIR = os.path.join(BASE_DIR, "src")
+
+DATABASE = os.path.join(BASE_DIR, "data", "weights.db")
+TEMPLATES_DIR = os.path.join(SRC_DIR, "templates")
+STATIC_DIR = os.path.join(SRC_DIR, "static")
+HELP_DIR = os.path.join(SRC_DIR, "help")
+
+
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 app = FastAPI()
-DATABASE = "data/weights.db"
-templates = Jinja2Templates(directory="templates")
-app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 # Ensure database exists
 def init_db():

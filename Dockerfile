@@ -16,4 +16,4 @@ COPY . .
 
 EXPOSE 9600
 
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "9600"]
+CMD ["uvicorn", "src.app:app", "--host", "0.0.0.0", "--port", "9600"]
