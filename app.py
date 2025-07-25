@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from fpdf import FPDF
 import sqlite3
 import os
@@ -9,6 +10,7 @@ from typing import List, Optional
 app = FastAPI()
 DATABASE = "data/weights.db"
 templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Ensure database exists
 def init_db():

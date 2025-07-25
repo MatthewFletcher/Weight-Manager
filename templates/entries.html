@@ -3,115 +3,6 @@
 
 <head>
 	<title>All Entries</title>
-	<style>
-		body {
-			font-family: sans-serif;
-			background: #f5f6fa;
-			margin: 0;
-			padding: 0;
-		}
-
-		.container {
-			background: #fff;
-			padding: 2em 2.5em;
-			max-width: 700px;
-			margin: 3em auto 0 auto;
-			border-radius: 10px;
-			box-shadow: 0 2px 10px rgba(60, 60, 90, 0.07);
-		}
-
-		h2 {
-			text-align: center;
-			color: #3a3a4d;
-		}
-
-		form {
-			margin-bottom: 0;
-		}
-
-		table {
-			width: 100%;
-			border-collapse: collapse;
-			margin-top: 1.5em;
-			background: #fafaff;
-			border-radius: 8px;
-			overflow: hidden;
-			box-shadow: 0 1px 4px rgba(60, 60, 90, 0.05);
-		}
-
-		th,
-		td {
-			padding: 0.7em;
-			text-align: left;
-		}
-
-		th {
-			background: #e7ebf8;
-			color: #4a4a60;
-			font-weight: bold;
-		}
-
-		tr:nth-child(even) {
-			background: #f1f3fa;
-		}
-
-		tr:hover {
-			background: #dde8ff;
-		}
-
-		input[type="checkbox"] {
-			width: 1.2em;
-			height: 1.2em;
-			accent-color: #4f8cff;
-		}
-
-		button {
-			padding: 0.7em 1.5em;
-			font-size: 1em;
-			border-radius: 5px;
-			background: #ff5252;
-			color: white;
-			font-weight: bold;
-			border: none;
-			cursor: pointer;
-			margin-top: 1em;
-			transition: background 0.2s;
-			display: block;
-			margin-left: auto;
-			margin-right: auto;
-		}
-
-		button:hover {
-			background: #d32f2f;
-		}
-
-		.nav-links {
-			margin-top: 2em;
-			text-align: center;
-		}
-
-		.nav-links a {
-			margin: 0 1em;
-			color: #4f8cff;
-			text-decoration: none;
-			font-weight: bold;
-			transition: color 0.2s;
-		}
-
-		.nav-links a:hover {
-			color: #3065d4;
-		}
-	</style>
-	<script>
-		function confirmDelete() {
-			const checked = document.querySelectorAll('input[name="delete_ids"]:checked').length;
-			if (checked === 0) {
-				alert("Please select at least one entry to delete.");
-				return false;
-			}
-			return confirm(`Are you sure you want to delete ${checked} entr${checked > 1 ? 'ies' : 'y'}?`);
-		}
-	</script>
 </head>
 
 <body>
@@ -133,28 +24,20 @@
 					<td>{{ entry[2] }}</td>
 					<td>{{ entry[3] }}</td>
 					<td style="vertical-align: middle;">
-						<div style="display: flex; align-items: center; gap: 0.5em;">
-							<button type="button" onclick="toggleForm('{{ entry[0] }}')"
-								style="background: #4f8cff; color:white; border:none; border-radius:4px; padding:0.4em 0.8em;">
+						<div class="add-weight-row">
+							<button type="button" onclick="toggleForm('{{ entry[0] }}')" class="add-weight-btn">
 								Add Weight
 							</button>
 							<form action="/add_weight/{{ entry[0] }}" method="post" id="form-{{ entry[0] }}"
-								style="display:none; flex-direction: row; align-items: center; gap: 0.5em; margin: 0;">
+								style="display:none;">
 								<input type="number" name="weight" step="0.1" required placeholder="New weight"
 									style="padding:0.4em; border-radius:4px; border:1px solid #d2d2e6; width:90px;">
-								<button type="submit"
-									style="background: #43d17d; color:white; border:none; border-radius:4px; padding:0.4em 0.8em; font-size:0.95em;">
-									Save
-								</button>
+								<button type="button" class="save-btn" onclick="onSaveClick(this)">Save</button>
 								<button type="button" onclick="toggleForm('{{ entry[0] }}')"
-									style="background: #f4f4f4; border:none; border-radius:4px; padding:0.4em 0.8em;">
-									Cancel
-								</button>
+									class="cancel-btn">Cancel</button>
 							</form>
 						</div>
 					</td>
-
-
 				</tr>
 				{% endfor %}
 			</table>
@@ -166,17 +49,8 @@
 			<a href="/report">Generate PDF Report</a>
 		</div>
 	</div>
-	<script>
-		function toggleForm(id) {
-			var form = document.getElementById('form-' + id);
-			if (form.style.display === "none" || form.style.display === "") {
-				form.style.display = "inline-block";
-			} else {
-				form.style.display = "none";
-			}
-		}
-	</script>
-
+	<script src="/static/script.js"></script>
+	<link rel="stylesheet" href="/static/style.css">
 </body>
 
 </html>
