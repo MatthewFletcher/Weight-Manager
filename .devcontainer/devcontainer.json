@@ -16,7 +16,7 @@
     }
   },
   "forwardPorts": [
-    6900
+    9600
   ],
   "postCreateCommand": "pip install --upgrade pip"
 }

@@ -40,7 +40,7 @@ Built with Python, FastAPI, HTML, and Docker.
     ```
     *(Or use `docker compose up --build` on newer Docker installs.)*
 
-3. **Open your browser to** [http://localhost:6900](http://localhost:6900)
+3. **Open your browser to** [http://localhost:9600](http://localhost:9600)
 
 4. **To stop the app:**  
     Press `Ctrl+C` in the terminal and run `docker-compose down` if needed.
