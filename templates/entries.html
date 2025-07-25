@@ -30,16 +30,23 @@
 				<tbody>
 					{% for entry in entries %}
 					<tr>
-						<td><input type="checkbox" name="delete_ids" value="{{ entry[0] }}"></td>
+						<td>
+							<input type="checkbox" name="delete_ids" value="{{ entry[0] }}" class="entry-checkbox">
+						</td>
 						<td>{{ entry[1] }}</td>
 						<td>{{ entry[2] }}</td>
-						<td>
+						<td class="weights-grid">
 							{% set weight_list = entry[3].split(',') if entry[3] else [] %}
-							{% for w in weight_list %}
+							{% set padded_weights = ([''] * (5 - weight_list|length)) + weight_list %}
+							{% for w in padded_weights %}
+							{% if w %}
 							{% if loop.last %}
-							<span style="font-weight: bold; color: #3065d4;">{{ w | int }}</span>
+							<span class="weight-cell weight-latest">{{ w | int }}</span>
 							{% else %}
-							<span>{{ w | int }}</span>,
+							<span class="weight-cell">{{ w | int }}</span>
+							{% endif %}
+							{% else %}
+							<span class="weight-cell"></span>
 							{% endif %}
 							{% endfor %}
 						</td>
@@ -47,6 +54,7 @@
 					</tr>
 					{% endfor %}
 				</tbody>
+
 			</table>
 			<button type="submit">Delete Selected</button>
 		</form>

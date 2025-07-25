@@ -187,3 +187,31 @@ td {
   cursor: pointer;
 }
 .help-close:hover { color: #3065d4; }
+
+
+.weights-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 2.6em); /* or adjust width as needed */
+  gap: 0.3em;
+  text-align: center;
+}
+.weight-cell {
+  display: inline-block;
+  min-width: 2.3em;
+  padding: 0.1em 0;
+}
+.weight-latest {
+  font-weight: bold;
+  color: #3065d4;
+}
+
+
+/* Hide spinners/arrows for all number inputs */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}

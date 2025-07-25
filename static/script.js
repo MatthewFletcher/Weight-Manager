@@ -53,7 +53,7 @@ function showHelp(page) {
 }
 
 window.addEventListener('DOMContentLoaded', function() {
-  // You may want to set this differently per page:
+  // ---- HELP MODAL ----
   let helpPage = "entries"; // or "entry_form" for the form page
   if (document.getElementById('help-btn')) {
     if (window.location.pathname.includes("entries")) {
@@ -75,4 +75,26 @@ window.addEventListener('DOMContentLoaded', function() {
       modal.style.display = "none";
     }
   }
+
+  // ---- SHIFT+CLICK RANGE SELECTION FOR CHECKBOXES ----
+  let lastChecked = null;
+  const checkboxes = Array.from(document.querySelectorAll('.entry-checkbox'));
+  checkboxes.forEach((cb) => {
+    cb.addEventListener('click', function(event) {
+      if (!lastChecked) {
+        lastChecked = cb;
+        return;
+      }
+      if (event.shiftKey) {
+        let start = checkboxes.indexOf(lastChecked);
+        let end = checkboxes.indexOf(cb);
+        let [min, max] = [Math.min(start, end), Math.max(start, end)];
+        for (let i = min; i <= max; i++) {
+          checkboxes[i].checked = lastChecked.checked;
+        }
+      }
+      lastChecked = cb;
+    });
+  });
 });
+
