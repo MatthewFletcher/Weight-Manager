@@ -3,7 +3,17 @@
 
 <head>
 	<title>Weight Entry Form Test</title>
+
+	<script>
+		window.addWeightEntryMap = {
+    	{% for entry in entries %}
+			"{{ entry[0] }}": "add-weight-form-{{ entry[0] }}"{% if not loop.last %}, {% endif %}
+		{% endfor %}
+		};
+	</script>
+
 	<link rel="stylesheet" href="/static/style.css">
+
 	<script src="/static/form.js"></script>
 	<script src="/static/help.js"></script>
 	<script src="/static/table.js"></script>

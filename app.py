@@ -9,6 +9,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse, JSON
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fpdf import FPDF
+from fastapi import Form, Request
+from fastapi.responses import JSONResponse
 import markdown as md
 
 # Paths
@@ -97,17 +99,36 @@ async def add_weight(entry_hash: str, weight: float = Form(...)):
 async def update_field(
     hash: str = Form(...),
     field: str = Form(...),
-    value: str = Form(...)
+    value: str = Form(...),
+    index: int = Form(None),  # Optional index parameter for weights
 ):
-    if field not in {"name", "room", "admission_date"}:
+    if field not in {"name", "room", "admission_date", "weight"}:
         return JSONResponse({"error": "Invalid field"}, status_code=400)
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
-    # Update the field
-    cursor.execute(f"UPDATE entries SET {field}=? WHERE hash=?", (value, hash))
+
+    if field == "weight":
+        if index is None:
+            return JSONResponse({"error": "Missing index for weight update"}, status_code=400)
+        # Fetch current weights string
+        cursor.execute("SELECT weights FROM entries WHERE hash=?", (hash,))
+        row = cursor.fetchone()
+        if not row:
+            conn.close()
+            return JSONResponse({"error": "Entry not found"}, status_code=404)
+        weights_str = row[0] or ""
+        weights = weights_str.split(",") if weights_str else []
+        # Pad weights if needed
+        if len(weights) < index + 1:
+            weights = ([""] * (index + 1 - len(weights))) + weights
+        weights[index] = value
+        new_weights_str = ",".join(weights)
+        cursor.execute("UPDATE entries SET weights=? WHERE hash=?", (new_weights_str, hash))
+    else:
+        cursor.execute(f"UPDATE entries SET {field}=? WHERE hash=?", (value, hash))
+
     conn.commit()
     conn.close()
-    # For room/name, might need to recalculate hash (not implemented here)
     return JSONResponse({"success": True, "value": value})
 
 

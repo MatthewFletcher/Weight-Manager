@@ -2,154 +2,114 @@
 <html>
 
 <head>
-	<title>All Entries</title>
-	<link rel="stylesheet" href="/static/style.css">
-	<script src="/static/form.js"></script>
-	<script src="/static/help.js"></script>
-	<script src="/static/table.js"></script>
-	<script src="/static/tablesort.min.js"></script>
+    <title>All Entries</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/form.js"></script>
+    <script src="/static/help.js"></script>
+    <script src="/static/table.js"></script>
+    <script src="/static/tablesort.min.js"></script>
 </head>
 
 <body>
-	<div class="container">
-		<button id="help-btn" class="help-btn" title="Help">?</button>
-		<div id="help-modal" class="help-modal" style="display:none;">
-			<div class="help-modal-content">
-				<span id="help-close" class="help-close">&times;</span>
-				<div id="help-content">Loading...</div>
-			</div>
-		</div>
-		<h2>All Entries</h2>
-		<form action="/delete" method="post" onsubmit="return confirmDelete();">
-			<table id="entries-table">
-				<thead>
-					<tr>
-						<th>
-							<input type="checkbox" id="select-all-checkbox" title="Select/Deselect All">
-						</th>
-						<th>Name</th>
-						<th data-sort-method="number">Room</th>
-						<th>Admission Date</th>
-						<th>Weights</th>
-						<th>Add Weight</th>
-					</tr>
-				</thead>
-				<tbody>
-					{% for entry in entries %}
-					<tr>
-						<td>
-							<input type="checkbox" name="delete_hashes" value="{{ entry[0] }}" class="entry-checkbox">
-						</td>
-						<td class="editable" data-hash="{{ entry[0] }}" data-field="name">{{ entry[1] }}</td>
-						<td class="editable" data-hash="{{ entry[0] }}" data-field="room">{{ entry[2] if entry[2] else
-							"N/A" }}</td>
-						<td class="editable" data-hash="{{ entry[0] }}" data-field="admission_date">{{ entry[4] }}</td>
-						<td class="weights-grid">
-							{% set weight_list = entry[3].split(',') if entry[3] else [] %}
-							{% set padded_weights = ([''] * (5 - weight_list|length)) + weight_list %}
-							{% for w in padded_weights %}
-							{% if w %}
-							{% if loop.last %}
-							<span class="weight-cell weight-latest">{{ w | int }}</span>
-							{% else %}
-							<span class="weight-cell">{{ w | int }}</span>
-							{% endif %}
-							{% else %}
-							<span class="weight-cell"></span>
-							{% endif %}
-							{% endfor %}
-						</td>
-						<td id="add-weight-cell-{{ entry[0] }}"></td>
-					</tr>
-					{% endfor %}
-				</tbody>
-			</table>
-			<button type="submit">Delete Selected</button>
-		</form>
+    <div class="container">
+        <button id="help-btn" class="help-btn" title="Help">?</button>
+        <div id="help-modal" class="help-modal" style="display:none;">
+            <div class="help-modal-content">
+                <span id="help-close" class="help-close">&times;</span>
+                <div id="help-content">Loading...</div>
+            </div>
+        </div>
+        <h2>All Entries</h2>
 
-		<!-- Render all Add Weight forms OUTSIDE the Delete form, for each entry -->
-		{% for entry in entries %}
-		<form action="/add_weight/{{ entry[0] }}" method="post" id="add-weight-form-{{ entry[0] }}"
-			class="add-weight-form" style="display:inline-flex; gap:0.5em; align-items:center; margin:0;">
-			<input type="number" name="weight" step="0.1" required placeholder="New weight"
-				style="padding:0.4em; border-radius:4px; border:1px solid #d2d2e6; width:90px;">
-			<button type="submit" class="save-btn">Add Weight</button>
-		</form>
-		{% endfor %}
+        <table id="entries-table">
+            <thead>
+                <tr>
+                    <th>
+                        <input type="checkbox" id="select-all-checkbox" title="Select/Deselect All">
+                    </th>
+                    <th>Name</th>
+                    <th data-sort-method="number">Room</th>
+                    <th>Admission Date</th>
+                    <th>Weights</th>
+                    <th>Add Weight</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in entries %}
+                <tr>
+                    <td>
+                        <input type="checkbox" name="delete_hashes" value="{{ entry[0] }}" class="entry-checkbox">
+                    </td>
+                    <td class="editable" data-hash="{{ entry[0] }}" data-field="name">{{ entry[1] }}</td>
+                    <td class="editable" data-hash="{{ entry[0] }}" data-field="room">
+                        {{ entry[2] if entry[2] else "N/A" }}
+                    </td>
+                    <td class="editable" data-hash="{{ entry[0] }}" data-field="admission_date">{{ entry[4] }}</td>
+                    <td class="weights-grid">
+                        {% set weight_list = entry[3].split(',') if entry[3] else [] %}
+                        {% set padded_weights = ([''] * (5 - weight_list|length)) + weight_list %}
+                        {% for w in padded_weights %}
+                        {% set idx = loop.index0 %}
+                        {% if w %}
+                        {% if loop.last %}
+                        <span class="weight-cell weight-latest" data-hash="{{ entry[0] }}" data-index="{{ idx }}"
+                            data-value="{{ w | int }}">{{ w | int }}</span>
+                        {% else %}
+                        <span class="weight-cell" data-hash="{{ entry[0] }}" data-index="{{ idx }}"
+                            data-value="{{ w | int }}">{{ w | int }}</span>
+                        {% endif %}
+                        {% else %}
+                        <span class="weight-cell" data-hash="{{ entry[0] }}" data-index="{{ idx }}"
+                            data-value=""></span>
+                        {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td>
+                        <form action="/add_weight/{{ entry[0] }}" method="post" id="add-weight-form-{{ entry[0] }}"
+                            class="add-weight-form"
+                            style="display:inline-flex; gap:0.5em; align-items:center; margin:0;">
+                            <input type="number" name="weight" step="0.1" required placeholder="New weight"
+                                style="padding:0.4em; border-radius:4px; border:1px solid #d2d2e6; width:90px;">
+                            <button type="submit" class="save-btn">Add Weight</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
 
-		<div class="nav-links">
-			<a href="/">Back to form</a> |
-			<a href="/report">Generate PDF Report</a>
-		</div>
-	</div>
+        <!-- Standalone Delete Form (populated by JS) -->
+        <form action="/delete" method="post" id="delete-form" onsubmit="return collectCheckedEntries();">
+            <button type="submit" class="delete-btn" style="margin: 2em auto 0 auto; display: block;">Delete Selected</button>
+        </form>
 
-	<script>
-		document.addEventListener('DOMContentLoaded', function () {
-			new Tablesort(document.getElementById('entries-table'));
-			// Move Add Weight forms into the right cells
-			{% for entry in entries %}
-			var cell = document.getElementById('add-weight-cell-{{ entry[0] }}');
-			var form = document.getElementById('add-weight-form-{{ entry[0] }}');
-			if (cell && form) cell.appendChild(form);
-			{% endfor %}
-		});
-	</script>
-	<script>
-		document.addEventListener("DOMContentLoaded", function () {
-			document.querySelectorAll('.editable').forEach(function (cell) {
-				cell.ondblclick = function () {
-					if (cell.querySelector('input')) return; // Already editing
+        <div class="nav-links">
+            <a href="/">Back to form</a> |
+            <a href="/report">Generate PDF Report</a>
+        </div>
+    </div>
 
-					let oldValue = cell.innerText === "N/A" ? "" : cell.innerText;
-					let field = cell.dataset.field;
-					let hash = cell.dataset.hash;
-					let inputType = field === "admission_date" ? "date" : "text";
-					let input = document.createElement("input");
-					input.type = inputType;
-					input.value = oldValue;
-					if (inputType === "date" && oldValue && !/^\d{4}-\d{2}-\d{2}$/.test(oldValue)) {
-						// Try to convert to YYYY-MM-DD if needed
-						let d = new Date(oldValue);
-						input.value = d.toISOString().split('T')[0];
-					}
-					cell.innerHTML = "";
-					cell.appendChild(input);
-					input.focus();
-
-					input.onkeydown = function (e) {
-						if (e.key === "Enter") input.blur();
-						if (e.key === "Escape") { cell.innerHTML = oldValue || "N/A"; }
-					};
-					input.onblur = function () {
-						let newValue = input.value.trim();
-						if (newValue === "") newValue = field === "room" ? "" : oldValue; // Only allow room to be empty
-						fetch("/update_field", {
-							method: "POST",
-							body: new URLSearchParams({
-								hash,
-								field,
-								value: newValue
-							})
-						})
-							.then(r => r.json())
-							.then(data => {
-								if (data.success) {
-									cell.innerText = (field === "room" && !newValue) ? "N/A" : newValue;
-								} else {
-									cell.innerText = oldValue || "N/A";
-									alert("Update failed: " + (data.error || "unknown error"));
-								}
-							})
-							.catch(() => {
-								cell.innerText = oldValue || "N/A";
-								alert("Update failed.");
-							});
-					};
-				}
-			});
-		});
-	</script>
-
+    <script>
+    // Handles moving selected checkboxes into the delete form as hidden fields before submit
+    function collectCheckedEntries() {
+        const form = document.getElementById('delete-form');
+        // Remove previous hidden inputs
+        Array.from(form.querySelectorAll('input[type="hidden"]')).forEach(e => e.remove());
+        // Find all checked checkboxes in table
+        document.querySelectorAll('.entry-checkbox:checked').forEach(box => {
+            let input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'delete_hashes';
+            input.value = box.value;
+            form.appendChild(input);
+        });
+        // If none checked, block submit and alert
+        if (form.querySelectorAll('input[type="hidden"]').length === 0) {
+            alert("Please select at least one entry to delete.");
+            return false;
+        }
+        return confirm(`Are you sure you want to delete ${form.querySelectorAll('input[type="hidden"]').length} entr${form.querySelectorAll('input[type="hidden"]').length > 1 ? 'ies' : 'y'}?`);
+    }
+    </script>
 </body>
-
 </html>
