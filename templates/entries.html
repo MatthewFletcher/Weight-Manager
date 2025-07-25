@@ -4,6 +4,10 @@
 <head>
 	<title>All Entries</title>
 	<link rel="stylesheet" href="/static/style.css">
+	<script src="/static/form.js"></script>
+	<script src="/static/help.js"></script>
+	<script src="/static/table.js"></script>
+	<script src="/static/tablesort.min.js"></script>
 </head>
 
 <body>
@@ -20,7 +24,9 @@
 			<table id="entries-table">
 				<thead>
 					<tr>
-						<th></th>
+						<th>
+							<input type="checkbox" id="select-all-checkbox" title="Select/Deselect All">
+						</th>
 						<th>Name</th>
 						<th data-sort-method="number">Room</th>
 						<th>Weights</th>
@@ -74,8 +80,7 @@
 			<a href="/report">Generate PDF Report</a>
 		</div>
 	</div>
-	<script src="/static/script.js"></script>
-	<script src="/static/tablesort.min.js"></script>
+
 	<script>
 		document.addEventListener('DOMContentLoaded', function () {
 			new Tablesort(document.getElementById('entries-table'));

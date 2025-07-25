@@ -8,6 +8,7 @@ import os
 from typing import List, Optional
 import markdown as md
 from fastapi.responses import JSONResponse
+from datetime import datetime
 
 app = FastAPI()
 DATABASE = "data/weights.db"
@@ -118,7 +119,7 @@ async def generate_report():
         last_weight = weights.split(",")[-1]
         pdf.cell(60, 10, name, 1)
         pdf.cell(40, 10, room, 1)
-        pdf.cell(40, 10, last_weight, 1)
+        pdf.cell(40, 10, int(last_weight), 1)
         pdf.cell(50, 10, "", 1, ln=True)
 
     report_path = "data/report.pdf"
