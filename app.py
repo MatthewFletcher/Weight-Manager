@@ -1,14 +1,13 @@
-from fastapi import FastAPI, Request, Form, Depends
+from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from fpdf import FPDF
 import sqlite3
 import os
-from jinja2 import Template
 
 app = FastAPI()
-
 DATABASE = "data/weights.db"
+templates = Jinja2Templates(directory="templates")
 
 # Ensure database exists
 def init_db():
@@ -25,47 +24,9 @@ def init_db():
 
 init_db()
 
-# Templates
-ENTRY_FORM = '''
-<html>
-<body>
-<h2>Weight Entry Form</h2>
-<form action="/add" method="post">
-Name: <input type="text" name="name" required><br>
-Room: <input type="text" name="room" required><br>
-Weight: <input type="number" step="0.1" name="weight" required><br>
-<button type="submit">Add Entry</button>
-</form>
-<a href="/entries">View All Entries</a><br>
-<a href="/report">Generate PDF Report</a>
-</body>
-</html>
-'''
-
-ENTRIES_TEMPLATE = '''
-<html>
-<body>
-<h2>All Entries</h2>
-<table border="1">
-<tr><th>Name</th><th>Room</th><th>Weights</th><th>Action</th></tr>
-{% for entry in entries %}
-<tr>
-<td>{{entry[1]}}</td>
-<td>{{entry[2]}}</td>
-<td>{{entry[3]}}</td>
-<td><a href="/delete/{{entry[0]}}">Delete</a></td>
-</tr>
-{% endfor %}
-</table>
-<a href="/">Back to form</a>
-</body>
-</html>
-'''
-
-# Routes
 @app.get("/", response_class=HTMLResponse)
-async def form():
-    return ENTRY_FORM
+async def form(request: Request):
+    return templates.TemplateResponse("entry_form.html", {"request": request})
 
 @app.post("/add")
 async def add_entry(name: str = Form(...), room: str = Form(...), weight: float = Form(...)):
@@ -84,14 +45,13 @@ async def add_entry(name: str = Form(...), room: str = Form(...), weight: float 
     return RedirectResponse("/", status_code=303)
 
 @app.get("/entries", response_class=HTMLResponse)
-async def entries():
+async def entries(request: Request):
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM entries")
     rows = cursor.fetchall()
     conn.close()
-    template = Template(ENTRIES_TEMPLATE)
-    return template.render(entries=rows)
+    return templates.TemplateResponse("entries.html", {"request": request, "entries": rows})
 
 @app.get("/delete/{entry_id}")
 async def delete(entry_id: int):
@@ -131,6 +91,4 @@ async def generate_report():
     report_path = "data/report.pdf"
     pdf.output(report_path)
     return FileResponse(report_path, media_type="application/pdf", filename="weight_report.pdf")
-
-# Run with: docker-compose up -d
 

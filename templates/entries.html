@@ -1,0 +1,18 @@
+<html>
+	<body>
+		<h2>All Entries</h2>
+		<table border="1">
+			<tr><th>Name</th><th>Room</th><th>Weights</th><th>Action</th></tr>
+			{% for entry in entries %}
+			<tr>
+				<td>{{ entry[1] }}</td>
+				<td>{{ entry[2] }}</td>
+				<td>{{ entry[3] }}</td>
+				<td><a href="/delete/{{ entry[0] }}">Delete</a></td>
+			</tr>
+			{% endfor %}
+		</table>
+		<a href="/">Back to form</a>
+	</body>
+</html>
+
