@@ -4,6 +4,7 @@ from fastapi.templating import Jinja2Templates
 from fpdf import FPDF
 import sqlite3
 import os
+from typing import List, Optional
 
 app = FastAPI()
 DATABASE = "data/weights.db"
@@ -44,6 +45,20 @@ async def add_entry(name: str = Form(...), room: str = Form(...), weight: float 
     conn.close()
     return RedirectResponse("/", status_code=303)
 
+@app.post("/add_weight/{entry_id}")
+async def add_weight(entry_id: int, weight: float = Form(...)):
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT weights FROM entries WHERE id=?", (entry_id,))
+    row = cursor.fetchone()
+    if row:
+        weights = row[0].split(",") + [str(weight)]
+        weights = weights[-5:]
+        cursor.execute("UPDATE entries SET weights=? WHERE id=?", (",".join(weights), entry_id))
+        conn.commit()
+    conn.close()
+    return RedirectResponse("/entries", status_code=303)
+
 @app.get("/entries", response_class=HTMLResponse)
 async def entries(request: Request):
     conn = sqlite3.connect(DATABASE)
@@ -53,12 +68,14 @@ async def entries(request: Request):
     conn.close()
     return templates.TemplateResponse("entries.html", {"request": request, "entries": rows})
 
-@app.get("/delete/{entry_id}")
-async def delete(entry_id: int):
-    conn = sqlite3.connect(DATABASE)
-    conn.execute("DELETE FROM entries WHERE id=?", (entry_id,))
-    conn.commit()
-    conn.close()
+@app.post("/delete")
+async def delete(delete_ids: Optional[List[str]] = Form(None)):
+    if delete_ids:
+        conn = sqlite3.connect(DATABASE)
+        cursor = conn.cursor()
+        cursor.executemany("DELETE FROM entries WHERE id=?", [(int(entry_id),) for entry_id in delete_ids])
+        conn.commit()
+        conn.close()
     return RedirectResponse("/entries", status_code=303)
 
 @app.get("/report")
