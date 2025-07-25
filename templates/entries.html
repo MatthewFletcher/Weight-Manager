@@ -3,6 +3,8 @@
 
 <head>
 	<title>All Entries</title>
+	<link rel="stylesheet" href="/static/style.css">
+	<script src="/static/script.js"></script>
 </head>
 
 <body>
@@ -23,34 +25,35 @@
 					<td>{{ entry[1] }}</td>
 					<td>{{ entry[2] }}</td>
 					<td>{{ entry[3] }}</td>
-					<td style="vertical-align: middle;">
-						<div class="add-weight-row">
-							<button type="button" onclick="toggleForm('{{ entry[0] }}')" class="add-weight-btn">
-								Add Weight
-							</button>
-							<form action="/add_weight/{{ entry[0] }}" method="post" id="form-{{ entry[0] }}"
-								style="display:none;">
-								<input type="number" name="weight" step="0.1" required placeholder="New weight"
-									style="padding:0.4em; border-radius:4px; border:1px solid #d2d2e6; width:90px;">
-								<button type="button" class="save-btn" onclick="onSaveClick(this)">Save</button>
-								<button type="button" onclick="toggleForm('{{ entry[0] }}')"
-									class="cancel-btn">Cancel</button>
-							</form>
-						</div>
+					<td id="add-weight-cell-{{ entry[0] }}" style="vertical-align: middle;">
+						<!-- Placeholder: the Add Weight form for this row will go here -->
 					</td>
 				</tr>
 				{% endfor %}
 			</table>
-
 			<button type="submit">Delete Selected</button>
 		</form>
+
+		<!-- Now render all Add Weight forms outside the Delete form, 
+		     and use a bit of JS to move them into the right cell after the page loads. -->
+		{% for entry in entries %}
+		<form action="/add_weight/{{ entry[0] }}" method="post" id="add-weight-form-{{ entry[0] }}"
+			style="display:inline-flex; gap:0.5em; align-items:center; margin:0;">
+			<input type="number" name="weight" step="0.1" required placeholder="New weight"
+				style="padding:0.4em; border-radius:4px; border:1px solid #d2d2e6; width:90px;">
+			<button type="submit" class="save-btn">Add Weight</button>
+		</form>
+		{% endfor %}
+
 		<div class="nav-links">
 			<a href="/">Back to form</a> |
 			<a href="/report">Generate PDF Report</a>
 		</div>
 	</div>
-	<script src="/static/script.js"></script>
-	<link rel="stylesheet" href="/static/style.css">
+
+<div id="entry-ids" data-ids="{% for entry in entries %}{{ entry[0] }}{% if not loop.last %},{% endif %}{% endfor %}"></div>
+<script src="/static/script.js"></script>
+
 </body>
 
 </html>

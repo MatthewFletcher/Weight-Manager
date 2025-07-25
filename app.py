@@ -91,7 +91,8 @@ async def generate_report():
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", "B", 14)
-    pdf.cell(0, 10, "Weight Report", ln=True, align="C")
+    report_title = f"Weight Report -- Generated {datetime.now().strftime('%B %d, %Y')}"
+    pdf.cell(0, 10, report_title, ln=True, align="C")
 
     pdf.set_font("Arial", "B", 12)
     pdf.cell(60, 10, "Name", 1)

@@ -21,3 +21,15 @@ function onSaveClick(button) {
   button.disabled = true;
   button.form.submit();
 }
+
+window.addEventListener('DOMContentLoaded', function() {
+  var dataDiv = document.getElementById('entry-ids');
+  if (dataDiv) {
+    var ids = dataDiv.getAttribute('data-ids').split(',').map(Number);
+    ids.forEach(function(id) {
+      var cell = document.getElementById('add-weight-cell-' + id);
+      var form = document.getElementById('add-weight-form-' + id);
+      if (cell && form) cell.appendChild(form);
+    });
+  }
+});

@@ -1,33 +1,43 @@
 <!DOCTYPE html>
 <html>
-	
+
 <head>
-  <title>Weight Entry Form</title>
+	<title>Weight Entry Form</title>
+	<link rel="stylesheet" href="/static/style.css">
+	<script src="/static/script.js"></script>
 </head>
+
 <body>
-  <div class="container">
-    <h2>Weight Entry Form</h2>
-    <form action="/add" method="post">
-      <div>
-        <label for="name">Name:</label>
-        <input id="name" type="text" name="name" required>
-      </div>
-      <div>
-        <label for="room">Room Number:</label>
-        <input id="room" type="text" name="room" required>
-      </div>
-      <div>
-        <label for="weight">Weight:</label>
-        <input id="weight" type="number" step="0.1" name="weight" required>
-      </div>
-      <button type="submit">Add Entry</button>
-    </form>
-    <div class="nav-links">
-      <a href="/entries">View All Entries</a> |
-      <a href="/report">Generate PDF Report</a>
-    </div>
-  </div>
-  <script src="/static/script.js"></script>
-  <link rel="stylesheet" href="/static/style.css">
+	<div class="container">
+		<h2>Weight Entry Form</h2>
+		<form action="/add" method="post">
+			<table>
+				<tr>
+					<td><label for="name">Name:</label></td>
+					<td><input id="name" type="text" name="name" required></td>
+				</tr>
+				<tr>
+					<td><label for="room">Room Number:</label></td>
+					<td><input id="room" type="text" name="room" required></td>
+				</tr>
+				<tr>
+					<td><label for="weight">Weight:</label></td>
+					<td><input id="weight" type="number" step="0.1" name="weight" required></td>
+				</tr>
+				<tr>
+					<td colspan="2" style="text-align: center;">
+						<button type="submit">Add Entry</button>
+					</td>
+				</tr>
+			</table>
+		</form>
+
+		<div class="nav-links">
+			<a href="/entries">View All Entries</a> |
+			<a href="/report">Generate PDF Report</a>
+		</div>
+	</div>
+
 </body>
+
 </html>
