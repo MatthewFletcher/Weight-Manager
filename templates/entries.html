@@ -29,6 +29,7 @@
 						</th>
 						<th>Name</th>
 						<th data-sort-method="number">Room</th>
+						<th>Admission Date</th>
 						<th>Weights</th>
 						<th>Add Weight</th>
 					</tr>
@@ -37,10 +38,12 @@
 					{% for entry in entries %}
 					<tr>
 						<td>
-							<input type="checkbox" name="delete_ids" value="{{ entry[0] }}" class="entry-checkbox">
+							<input type="checkbox" name="delete_hashes" value="{{ entry[0] }}" class="entry-checkbox">
 						</td>
-						<td>{{ entry[1] }}</td>
-						<td>{{ entry[2] }}</td>
+						<td class="editable" data-hash="{{ entry[0] }}" data-field="name">{{ entry[1] }}</td>
+						<td class="editable" data-hash="{{ entry[0] }}" data-field="room">{{ entry[2] if entry[2] else
+							"N/A" }}</td>
+						<td class="editable" data-hash="{{ entry[0] }}" data-field="admission_date">{{ entry[4] }}</td>
 						<td class="weights-grid">
 							{% set weight_list = entry[3].split(',') if entry[3] else [] %}
 							{% set padded_weights = ([''] * (5 - weight_list|length)) + weight_list %}
@@ -60,7 +63,6 @@
 					</tr>
 					{% endfor %}
 				</tbody>
-
 			</table>
 			<button type="submit">Delete Selected</button>
 		</form>
@@ -92,6 +94,62 @@
 			{% endfor %}
 		});
 	</script>
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			document.querySelectorAll('.editable').forEach(function (cell) {
+				cell.ondblclick = function () {
+					if (cell.querySelector('input')) return; // Already editing
+
+					let oldValue = cell.innerText === "N/A" ? "" : cell.innerText;
+					let field = cell.dataset.field;
+					let hash = cell.dataset.hash;
+					let inputType = field === "admission_date" ? "date" : "text";
+					let input = document.createElement("input");
+					input.type = inputType;
+					input.value = oldValue;
+					if (inputType === "date" && oldValue && !/^\d{4}-\d{2}-\d{2}$/.test(oldValue)) {
+						// Try to convert to YYYY-MM-DD if needed
+						let d = new Date(oldValue);
+						input.value = d.toISOString().split('T')[0];
+					}
+					cell.innerHTML = "";
+					cell.appendChild(input);
+					input.focus();
+
+					input.onkeydown = function (e) {
+						if (e.key === "Enter") input.blur();
+						if (e.key === "Escape") { cell.innerHTML = oldValue || "N/A"; }
+					};
+					input.onblur = function () {
+						let newValue = input.value.trim();
+						if (newValue === "") newValue = field === "room" ? "" : oldValue; // Only allow room to be empty
+						fetch("/update_field", {
+							method: "POST",
+							body: new URLSearchParams({
+								hash,
+								field,
+								value: newValue
+							})
+						})
+							.then(r => r.json())
+							.then(data => {
+								if (data.success) {
+									cell.innerText = (field === "room" && !newValue) ? "N/A" : newValue;
+								} else {
+									cell.innerText = oldValue || "N/A";
+									alert("Update failed: " + (data.error || "unknown error"));
+								}
+							})
+							.catch(() => {
+								cell.innerText = oldValue || "N/A";
+								alert("Update failed.");
+							});
+					};
+				}
+			});
+		});
+	</script>
+
 </body>
 
 </html>

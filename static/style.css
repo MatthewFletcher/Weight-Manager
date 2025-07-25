@@ -205,6 +205,9 @@ td {
   color: #3065d4;
 }
 
+.editable { cursor: pointer; background: #f4f8ff; }
+.editable input { width: 90%; font-size: 1em; }
+
 
 /* Hide spinners/arrows for all number inputs */
 input[type="number"]::-webkit-outer-spin-button,

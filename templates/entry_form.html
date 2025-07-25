@@ -2,7 +2,7 @@
 <html>
 
 <head>
-	<title>Weight Entry Form</title>
+	<title>Weight Entry Form Test</title>
 	<link rel="stylesheet" href="/static/style.css">
 	<script src="/static/form.js"></script>
 	<script src="/static/help.js"></script>
@@ -27,7 +27,14 @@
 				</tr>
 				<tr>
 					<td><label for="room">Room Number:</label></td>
-					<td><input id="room" type="text" name="room" required></td>
+					<td><input id="room" type="text" name="room"></td>
+				</tr>
+				<tr>
+					<td><label for="admission_date">Admission Date:</label></td>
+					<td style="display: flex; align-items: center; gap: 0.5em;">
+						<input id="admission_date" type="date" name="admission_date" required>
+						<button type="button" id="today-btn" style="padding: 0.5em 1em;">Today</button>
+					</td>
 				</tr>
 				<tr>
 					<td><label for="weight">Weight:</label></td>
@@ -46,7 +53,6 @@
 			<a href="/report">Generate PDF Report</a>
 		</div>
 	</div>
-
 </body>
 
 </html>

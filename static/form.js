@@ -21,3 +21,25 @@ function onSaveClick(button) {
   button.disabled = true;
   button.form.submit();
 }
+
+
+function setupTodayButton(dateFieldId = "admission_date", btnId = "today-btn") {
+  const btn = document.getElementById(btnId);
+  const dateField = document.getElementById(dateFieldId);
+  if (btn && dateField) {
+    btn.addEventListener("click", function () {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      dateField.value = `${yyyy}-${mm}-${dd}`;
+    });
+  } else {
+    console.log("Could not find Today button or date field");
+  }
+}
+
+// Call after DOM is loaded
+document.addEventListener('DOMContentLoaded', function () {
+  setupTodayButton();
+});
