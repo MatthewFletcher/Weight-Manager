@@ -180,7 +180,7 @@ async def generate_report():
     pdf.cell(40, 10, "Room", 1)
     pdf.cell(40, 10, "Admission Date", 1)
     pdf.cell(40, 10, "Last Weight", 1)
-    pdf.cell(50, 10, "Notes", 1, ln=True)
+    pdf.cell(50, 10, "Weights", 1, ln=True)
 
     pdf.set_font("Arial", "", 12)
     for name, room, weights, admission_date in rows:

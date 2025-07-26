@@ -62,6 +62,27 @@ window.addEventListener('DOMContentLoaded', function () {
 
 });
 
+    // Handles moving selected checkboxes into the delete form as hidden fields before submit
+    function collectCheckedEntries() {
+        const form = document.getElementById('delete-form');
+        // Remove previous hidden inputs
+        Array.from(form.querySelectorAll('input[type="hidden"]')).forEach(e => e.remove());
+        // Find all checked checkboxes in table
+        document.querySelectorAll('.entry-checkbox:checked').forEach(box => {
+            let input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'delete_hashes';
+            input.value = box.value;
+            form.appendChild(input);
+        });
+        // If none checked, block submit and alert
+        if (form.querySelectorAll('input[type="hidden"]').length === 0) {
+            alert("Please select at least one entry to delete.");
+            return false;
+        }
+        return confirm(`Are you sure you want to delete ${form.querySelectorAll('input[type="hidden"]').length} entr${form.querySelectorAll('input[type="hidden"]').length > 1 ? 'ies' : 'y'}?`);
+    }
+
 
 document.addEventListener('DOMContentLoaded', function () {
     // Initialize table sorting
