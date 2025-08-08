@@ -10,8 +10,10 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fpdf import FPDF
 from fastapi import Form, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 import markdown as md
+import logging
+import traceback
 
 # Paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -25,18 +27,24 @@ app = FastAPI()
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
+logger = logging.getLogger("uvicorn.error")  # or "myapp" if custom logger
+logger.setLevel(logging.DEBUG)
+
 # Ensure data directory exists
 os.makedirs(os.path.dirname(DATABASE), exist_ok=True)
+
 
 # Entry hash: hash of name and room (or "N/A" if room is blank)
 def entry_hash(name: str, room: Optional[str]) -> str:
     key = f"{name.strip()}::{(room or '').strip() or 'N/A'}"
     return hashlib.sha256(key.encode()).hexdigest()[:12]
 
+
 # Initialize database (with new schema)
 def init_db():
     conn = sqlite3.connect(DATABASE)
-    conn.execute('''
+    conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS entries (
             hash TEXT PRIMARY KEY,
             name TEXT NOT NULL,
@@ -44,20 +52,38 @@ def init_db():
             weights TEXT NOT NULL,
             admission_date TEXT NOT NULL
         )
-    ''')
+    """
+    )
     conn.close()
+
+
 init_db()
+
 
 @app.get("/", response_class=HTMLResponse)
 async def form(request: Request):
     return templates.TemplateResponse("entry_form.html", {"request": request})
+
+@app.get("/boom")
+def boom():
+    raise ValueError("Kaboom")
+
+
+@app.exception_handler(Exception)
+async def custom_500_handler(request: Request, exc: Exception):
+    tb_str = "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+    logger.error("Unhandled exception", exc_info=exc)
+    return templates.TemplateResponse(
+        "500.html", {"request": request, "traceback": tb_str}, status_code=500
+    )
+
 
 @app.post("/add")
 async def add_entry(
     name: str = Form(...),
     room: Optional[str] = Form(None),
     admission_date: str = Form(...),
-    weight: float = Form(...)
+    weight: float = Form(...),
 ):
     room_val = (room or "").strip()
     h = entry_hash(name, room_val)
@@ -70,16 +96,17 @@ async def add_entry(
         weights = weights[-5:]
         cursor.execute(
             "UPDATE entries SET weights=?, admission_date=? WHERE hash=?",
-            (",".join(weights), admission_date, h)
+            (",".join(weights), admission_date, h),
         )
     else:
         cursor.execute(
             "INSERT INTO entries (hash, name, room, weights, admission_date) VALUES (?, ?, ?, ?, ?)",
-            (h, name.strip(), room_val, str(weight), admission_date)
+            (h, name.strip(), room_val, str(weight), admission_date),
         )
     conn.commit()
     conn.close()
     return RedirectResponse("/", status_code=303)
+
 
 @app.post("/add_weight/{entry_hash}")
 async def add_weight(entry_hash: str, weight: float = Form(...)):
@@ -90,10 +117,13 @@ async def add_weight(entry_hash: str, weight: float = Form(...)):
     if row:
         weights = row[0].split(",") + [str(weight)]
         weights = weights[-5:]
-        cursor.execute("UPDATE entries SET weights=? WHERE hash=?", (",".join(weights), entry_hash))
+        cursor.execute(
+            "UPDATE entries SET weights=? WHERE hash=?", (",".join(weights), entry_hash)
+        )
         conn.commit()
     conn.close()
     return RedirectResponse("/entries", status_code=303)
+
 
 @app.post("/update_field")
 async def update_field(
@@ -109,7 +139,9 @@ async def update_field(
 
     if field == "weight":
         if index is None:
-            return JSONResponse({"error": "Missing index for weight update"}, status_code=400)
+            return JSONResponse(
+                {"error": "Missing index for weight update"}, status_code=400
+            )
         # Fetch current weights string
         cursor.execute("SELECT weights FROM entries WHERE hash=?", (hash,))
         row = cursor.fetchone()
@@ -123,7 +155,9 @@ async def update_field(
             weights = ([""] * (index + 1 - len(weights))) + weights
         weights[index] = value
         new_weights_str = ",".join(weights)
-        cursor.execute("UPDATE entries SET weights=? WHERE hash=?", (new_weights_str, hash))
+        cursor.execute(
+            "UPDATE entries SET weights=? WHERE hash=?", (new_weights_str, hash)
+        )
     else:
         cursor.execute(f"UPDATE entries SET {field}=? WHERE hash=?", (value, hash))
 
@@ -139,17 +173,23 @@ async def entries(request: Request):
     cursor.execute("SELECT hash, name, room, weights, admission_date FROM entries")
     rows = cursor.fetchall()
     conn.close()
-    return templates.TemplateResponse("entries.html", {"request": request, "entries": rows})
+    return templates.TemplateResponse(
+        "entries.html", {"request": request, "entries": rows}
+    )
+
 
 @app.post("/delete")
 async def delete(delete_hashes: Optional[List[str]] = Form(None)):
     if delete_hashes:
         conn = sqlite3.connect(DATABASE)
         cursor = conn.cursor()
-        cursor.executemany("DELETE FROM entries WHERE hash=?", [(h,) for h in delete_hashes])
+        cursor.executemany(
+            "DELETE FROM entries WHERE hash=?", [(h,) for h in delete_hashes]
+        )
         conn.commit()
         conn.close()
     return RedirectResponse("/entries", status_code=303)
+
 
 @app.get("/help/{page}")
 async def get_help(page: str):
@@ -160,6 +200,7 @@ async def get_help(page: str):
         md_content = f.read()
     html = md.markdown(md_content)
     return JSONResponse({"html": html})
+
 
 @app.get("/report")
 async def generate_report():
@@ -193,4 +234,6 @@ async def generate_report():
 
     os.makedirs(os.path.dirname(REPORT_PATH), exist_ok=True)
     pdf.output(REPORT_PATH)
-    return FileResponse(REPORT_PATH, media_type="application/pdf", filename="weight_report.pdf")
+    return FileResponse(
+        REPORT_PATH, media_type="application/pdf", filename="weight_report.pdf"
+    )
