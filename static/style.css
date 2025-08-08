@@ -4,24 +4,29 @@ body {
   margin: 0;
   padding: 0;
 }
+
+/* ============ Layout & Container ============ */
 .container {
   background: #fff;
   padding: 2em 2.5em;
-  max-width: 700px;
+  max-width: 900px; /* Increased for table fit */
   margin: 3em auto 0 auto;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(60,60,90,0.07);
+  border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(60,60,90,0.10);
+  overflow-x: auto; /* allow table scroll */
+  min-width: 340px;
 }
 h2 {
   text-align: center;
   color: #3a3a4d;
 }
-form {
-  margin-bottom: 0;
-}
-table {
+
+/* ============ Table Styles ============ */
+table, #entries-table {
   width: 100%;
+  min-width: 700px;
   border-collapse: collapse;
+  table-layout: calc();
   margin-top: 1.5em;
   background: #fafaff;
   border-radius: 8px;
@@ -29,8 +34,9 @@ table {
   box-shadow: 0 1px 4px rgba(60,60,90,0.05);
 }
 th, td {
-  padding: 0.7em;
+  padding: 0.7em 0.9em;
   text-align: left;
+  vertical-align: middle;
 }
 th {
   background: #e7ebf8;
@@ -43,12 +49,53 @@ tr:nth-child(even) {
 tr:hover {
   background: #dde8ff;
 }
-input[type="checkbox"] {
-  width: 1.2em;
-  height: 1.2em;
-  accent-color: #4f8cff;
+
+/* Responsive horizontal scroll for wide tables */
+@media (max-width: 820px) {
+  .container {
+    padding: 0.7em 0.3em;
+  }
+  table, #entries-table {
+    min-width: 550px;
+  }
 }
-button {
+
+/* ============ Weights Grid & Cells ============ */
+.weights-grid {
+  display: flex;           /* grid->flex for better mobile scroll */
+  gap: 0.3em;
+  align-items: center;
+}
+.weight-cell {
+  display: inline-block;
+  min-width: 2.3em;
+  padding: 0.1em 0;
+  background: #f5f7fa;
+  border-radius: 4px;
+  border: 1px solid #e2e2ea;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  text-align: center;
+  margin-right: 0.1em;
+}
+.weight-cell.weight-latest {
+  background: #def;
+  border-color: #b9e;
+  font-weight: bold;
+  color: #3065d4;
+}
+
+/* ============ Editable Fields ============ */
+.editable { 
+  cursor: pointer; 
+  background: #f4f8ff; 
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+.editable input { width: 90%; font-size: 1em; }
+
+/* ============ Add/Save/Cancel Buttons ============ */
+button, .save-btn {
   padding: 0.7em 1.5em;
   font-size: 1em;
   border-radius: 5px;
@@ -58,40 +105,34 @@ button {
   border: none;
   cursor: pointer;
   margin-top: 1em;
-  transition: background 0.2s;
   display: block;
   margin-left: auto;
   margin-right: auto;
+  transition: background 0.2s;
 }
-button:hover {
+button:hover, .save-btn:hover {
   background: #d32f2f;
 }
-.nav-links {
-  margin-top: 2em;
-  text-align: center;
+
+.save-btn {
+  background: #43d17d;
+  font-size: 0.95em;
+  padding: 0.4em 0.8em;
+  border-radius: 4px;
 }
-.nav-links a {
-  margin: 0 1em;
-  color: #4f8cff;
-  text-decoration: none;
-  font-weight: bold;
-  transition: color 0.2s;
+.save-btn:hover {
+  background: #269e52;
 }
-.nav-links a:hover {
-  color: #3065d4;
+.cancel-btn {
+  background: #f4f4f4;
+  border: none;
+  border-radius: 4px;
+  padding: 0.4em 0.8em;
+  margin-left: 0.4em;
+  cursor: pointer;
 }
-/* Flex for Add Weight */
-.add-weight-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
-}
-.add-weight-row form {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 0.5em;
-  margin: 0;
+.cancel-btn:hover {
+  background: #d4d4d4;
 }
 .add-weight-btn {
   background: #4f8cff;
@@ -112,33 +153,31 @@ button:hover {
   margin: 0;
   vertical-align: middle;
 }
-td {
-  vertical-align: middle;
-}
-.save-btn {
-  background: #43d17d;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 0.4em 0.8em;
-  font-size: 0.95em;
-  cursor: pointer;
-}
-.save-btn:hover {
-  background: #269e52;
-}
-.cancel-btn {
-  background: #f4f4f4;
-  border: none;
-  border-radius: 4px;
-  padding: 0.4em 0.8em;
-  margin-left: 0.4em;
-  cursor: pointer;
-}
-.cancel-btn:hover {
-  background: #d4d4d4;
+
+/* ============ Checkbox Inputs ============ */
+input[type="checkbox"] {
+  width: 1.2em;
+  height: 1.2em;
+  accent-color: #4f8cff;
 }
 
+/* ============ Nav Links ============ */
+.nav-links {
+  margin-top: 2em;
+  text-align: center;
+}
+.nav-links a {
+  margin: 0 1em;
+  color: #4f8cff;
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.2s;
+}
+.nav-links a:hover {
+  color: #3065d4;
+}
+
+/* ============ Help Modal ============ */
 .help-btn {
   position: absolute;
   right: 2em;
@@ -153,7 +192,6 @@ td {
   cursor: pointer;
   z-index: 200;
 }
-
 .help-modal {
   display: none;
   position: fixed;
@@ -165,7 +203,6 @@ td {
   overflow: auto;
   background-color: rgba(0,0,0,0.2);
 }
-
 .help-modal-content {
   background-color: #fff;
   margin: 5% auto;
@@ -176,7 +213,6 @@ td {
   box-shadow: 0 4px 24px rgba(0,0,0,0.13);
   position: relative;
 }
-
 .help-close {
   color: #aaa;
   position: absolute;
@@ -188,24 +224,7 @@ td {
 }
 .help-close:hover { color: #3065d4; }
 
-
-.weights-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 2.6em); /* or adjust width as needed */
-  gap: 0.3em;
-  text-align: center;
-}
-.weight-cell {
-  display: inline-block;
-  min-width: 2.3em;
-  padding: 0.1em 0;
-}
-.weight-latest {
-  font-weight: bold;
-  color: #3065d4;
-}
-
-
+/* ============ Misc Inputs ============ */
 /* Hide spinners/arrows for all number inputs */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {

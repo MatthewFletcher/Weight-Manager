@@ -61,3 +61,147 @@ window.addEventListener('DOMContentLoaded', function () {
   }
 
 });
+
+    // Handles moving selected checkboxes into the delete form as hidden fields before submit
+    function collectCheckedEntries() {
+        const form = document.getElementById('delete-form');
+        // Remove previous hidden inputs
+        Array.from(form.querySelectorAll('input[type="hidden"]')).forEach(e => e.remove());
+        // Find all checked checkboxes in table
+        document.querySelectorAll('.entry-checkbox:checked').forEach(box => {
+            let input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'delete_hashes';
+            input.value = box.value;
+            form.appendChild(input);
+        });
+        // If none checked, block submit and alert
+        if (form.querySelectorAll('input[type="hidden"]').length === 0) {
+            alert("Please select at least one entry to delete.");
+            return false;
+        }
+        return confirm(`Are you sure you want to delete ${form.querySelectorAll('input[type="hidden"]').length} entr${form.querySelectorAll('input[type="hidden"]').length > 1 ? 'ies' : 'y'}?`);
+    }
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    // Initialize table sorting
+    if (window.Tablesort) {
+        new Tablesort(document.getElementById('entries-table'));
+    }
+
+    // Move Add Weight forms into the right table cells
+    if (window.addWeightEntryMap) {
+        Object.entries(window.addWeightEntryMap).forEach(([hash, formId]) => {
+            var cell = document.getElementById('add-weight-cell-' + hash);
+            var form = document.getElementById(formId);
+            if (cell && form) cell.appendChild(form);
+        });
+    }
+});
+
+// In-place editing for table cells
+document.addEventListener("DOMContentLoaded", function () {
+    // Editable text/date fields
+    document.querySelectorAll('.editable').forEach(function (cell) {
+        cell.ondblclick = function () {
+            if (cell.querySelector('input')) return;
+            let oldValue = cell.innerText === "N/A" ? "" : cell.innerText;
+            let field = cell.dataset.field;
+            let hash = cell.dataset.hash;
+            let inputType = field === "admission_date" ? "date" : "text";
+            let input = document.createElement("input");
+            input.type = inputType;
+            input.value = oldValue;
+            if (inputType === "date" && oldValue && !/^\d{4}-\d{2}-\d{2}$/.test(oldValue)) {
+                let d = new Date(oldValue);
+                input.value = d.toISOString().split('T')[0];
+            }
+            cell.innerHTML = "";
+            cell.appendChild(input);
+            input.focus();
+
+            input.onkeydown = function (e) {
+                if (e.key === "Enter") input.blur();
+                if (e.key === "Escape") { cell.innerHTML = oldValue || "N/A"; }
+            };
+            input.onblur = function () {
+                let newValue = input.value.trim();
+                if (newValue === "") newValue = field === "room" ? "" : oldValue;
+                fetch("/update_field", {
+                    method: "POST",
+                    body: new URLSearchParams({
+                        hash,
+                        field,
+                        value: newValue
+                    })
+                })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            cell.innerText = (field === "room" && !newValue) ? "N/A" : newValue;
+                        } else {
+                            cell.innerText = oldValue || "N/A";
+                            alert("Update failed: " + (data.error || "unknown error"));
+                        }
+                    })
+                    .catch(() => {
+                        cell.innerText = oldValue || "N/A";
+                        alert("Update failed.");
+                    });
+            };
+        }
+    });
+
+    // Editable weights
+    document.querySelectorAll('.weight-cell').forEach(function (cell) {
+        cell.ondblclick = function () {
+            if (cell.querySelector('input')) return;
+            let oldValue = cell.dataset.value;
+            let hash = cell.dataset.hash;
+            let index = cell.dataset.index;
+            let input = document.createElement("input");
+            input.type = "number";
+            input.step = "0.1";
+            input.value = oldValue;
+            cell.innerHTML = "";
+            cell.appendChild(input);
+            input.focus();
+
+            input.onkeydown = function (e) {
+                if (e.key === "Enter") input.blur();
+                if (e.key === "Escape") cell.innerHTML = oldValue;
+            };
+            input.onblur = function () {
+                let newValue = input.value.trim();
+                if (newValue === "") {
+                    cell.innerHTML = oldValue;
+                    return;
+                }
+                fetch("/update_field", {
+                    method: "POST",
+                    body: new URLSearchParams({
+                        hash,
+                        field: "weight",
+                        value: newValue,
+                        index
+                    })
+                })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            cell.innerText = newValue;
+                            cell.dataset.value = newValue;
+                        } else {
+                            cell.innerText = oldValue;
+                            alert("Update failed: " + (data.error || "unknown error"));
+                        }
+                    })
+                    .catch(() => {
+                        cell.innerText = oldValue;
+                        alert("Update failed.");
+                    });
+            };
+        }
+    });
+});
