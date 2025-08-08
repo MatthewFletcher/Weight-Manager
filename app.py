@@ -237,7 +237,14 @@ async def generate_report():
         last_weight = weights.split(",")[-1]
         pdf.cell(col_widths["name"], 10, name, 1)
         pdf.cell(col_widths["room"], 10, room or "N/A", 1)
-        pdf.cell(col_widths["admission_date"], 10, admission_date or "", 1)
+        # Format admission_date as "Month Day" (e.g., August 8)
+        formatted_date = ""
+        if admission_date:
+            try:
+                formatted_date = datetime.strptime(admission_date, "%Y-%m-%d").strftime("%B %d")
+            except ValueError:
+                formatted_date = admission_date  # fallback in case format is off
+        pdf.cell(col_widths["admission_date"], 10, formatted_date, 1)
         pdf.cell(col_widths["last_weight"], 10, last_weight, 1)
         pdf.cell(col_widths["weights"], 10, "", 1, ln=True) 
 
