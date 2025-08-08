@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Internal Server Error</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script>
+        function toggleTraceback() {
+            const tb = document.getElementById("traceback");
+            tb.style.display = tb.style.display === "none" ? "block" : "none";
+        }
+    </script>
+</head>
+<body>
+    <div class="error-box">
+        <h1>500 - Internal Server Error</h1>
+        <p>Congratulations, you still managed to find a way to break my coding.</p>
+        <p>Click "Show Error Log" and send me a picture of the screen.</p>
+        <button onclick="toggleTraceback()">Show Error Log</button>
+        <pre id="traceback" style="display: none;">{{ traceback }}</pre>
+    </div>
+</body>
+</html>

@@ -234,3 +234,61 @@ input[type="number"]::-webkit-inner-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
 }
+
+
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 5%;
+    background-color: #f8f8f8;
+    margin: 0;
+}
+
+.error-box {
+    background-color: #fff;
+    padding: 2em;
+    border: 1px solid #ccc;
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+    display: inline-block;
+    max-width: 800px;
+    margin: auto;
+    border-radius: 8px;
+}
+
+h1 {
+    color: #c0392b;
+    font-size: 2em;
+    margin-bottom: 0.5em;
+}
+
+p {
+    color: #333;
+    font-size: 1.2em;
+}
+
+button {
+    margin-top: 1em;
+    padding: 0.5em 1em;
+    background-color: #c0392b;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #a93226;
+}
+
+pre {
+    text-align: left;
+    background-color: #f4f4f4;
+    padding: 1em;
+    margin-top: 1em;
+    overflow-x: auto;
+    max-height: 400px;
+    border: 1px solid #ddd;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 0.9em;
+}
