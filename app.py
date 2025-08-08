@@ -245,7 +245,7 @@ async def generate_report():
             except ValueError:
                 formatted_date = admission_date  # fallback in case format is off
         pdf.cell(col_widths["admission_date"], 10, formatted_date, 1)
-        pdf.cell(col_widths["last_weight"], 10, str(int(last_weight)), 1)
+        pdf.cell(col_widths["last_weight"], 10, str(int(float(last_weight))), 1)
         pdf.cell(col_widths["weights"], 10, "", 1, ln=True) 
 
     os.makedirs(os.path.dirname(REPORT_PATH), exist_ok=True)
