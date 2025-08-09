@@ -216,21 +216,37 @@ async def generate_report():
     report_title = f"Weight Report -- Generated {datetime.now().strftime('%B %d, %Y')}"
     pdf.cell(0, 10, report_title, ln=True, align="C")
 
+    # Adjusted column widths to fit within 190mm total
+    col_widths = {
+        "name": 50,
+        "room": 30,
+        "admission_date": 40,
+        "last_weight": 30,
+        "weights": 40
+    }
+
     pdf.set_font("Arial", "B", 12)
-    pdf.cell(60, 10, "Name", 1)
-    pdf.cell(40, 10, "Room", 1)
-    pdf.cell(40, 10, "Admission Date", 1)
-    pdf.cell(40, 10, "Last Weight", 1)
-    pdf.cell(50, 10, "Weights", 1, ln=True)
+    pdf.cell(col_widths["name"], 10, "Name", 1)
+    pdf.cell(col_widths["room"], 10, "Room", 1)
+    pdf.cell(col_widths["admission_date"], 10, "Admission Date", 1)
+    pdf.cell(col_widths["last_weight"], 10, "Last Weight", 1)
+    pdf.cell(col_widths["weights"], 10, "Weights", 1, ln=True)
 
     pdf.set_font("Arial", "", 12)
     for name, room, weights, admission_date in rows:
         last_weight = weights.split(",")[-1]
-        pdf.cell(60, 10, name, 1)
-        pdf.cell(40, 10, room or "N/A", 1)
-        pdf.cell(40, 10, admission_date or "", 1)
-        pdf.cell(40, 10, last_weight, 1)
-        pdf.cell(50, 10, "", 1, ln=True)
+        pdf.cell(col_widths["name"], 10, name, 1)
+        pdf.cell(col_widths["room"], 10, room or "N/A", 1)
+        # Format admission_date as "Month Day" (e.g., August 8)
+        formatted_date = ""
+        if admission_date:
+            try:
+                formatted_date = datetime.strptime(admission_date, "%Y-%m-%d").strftime("%B %d")
+            except ValueError:
+                formatted_date = admission_date  # fallback in case format is off
+        pdf.cell(col_widths["admission_date"], 10, formatted_date, 1)
+        pdf.cell(col_widths["last_weight"], 10, str(int(float(last_weight))), 1)
+        pdf.cell(col_widths["weights"], 10, "", 1, ln=True) 
 
     os.makedirs(os.path.dirname(REPORT_PATH), exist_ok=True)
     pdf.output(REPORT_PATH)
