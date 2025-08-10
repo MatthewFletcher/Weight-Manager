@@ -1,22 +1,20 @@
+import hashlib
+import json
+import logging
 import os
 import sqlite3
-import hashlib
+import traceback
 from datetime import datetime
 from typing import List, Optional
 
-from fastapi import FastAPI, Request, Form, Body
-from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from starlette.exceptions import HTTPException as StarletteHTTPException
-from fpdf import FPDF
-from fastapi import Form, Request
-from fastapi.responses import JSONResponse, FileResponse
 import markdown as md
-import logging
-import traceback
+from fastapi import FastAPI, File, Form, Request, UploadFile
+from fastapi.responses import (FileResponse, HTMLResponse, JSONResponse,
+                               RedirectResponse)
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fpdf import FPDF
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 # Paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -43,22 +41,22 @@ def entry_hash(name: str, room: Optional[str], building: Optional[str]) -> str:
     return hashlib.sha256(key.encode()).hexdigest()[:12]
 
 
-from fastapi import UploadFile, File, Form
-import json
+
 
 def count_entries_by_building():
     conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
-    cur.execute("""
+    cur.execute(
+        """
         SELECT COALESCE(NULLIF(building,''), 'Unassigned') AS b, COUNT(*)
         FROM entries
         GROUP BY b
         ORDER BY b COLLATE NOCASE
-    """)
+    """
+    )
     rows = cur.fetchall()
     conn.close()
     return rows  # list[(building, count)]
-
 
 
 # Initialize database (with new schema)
@@ -91,7 +89,11 @@ async def form(request: Request, building: Optional[str] = None):
     selected_building = building or (buildings[0] if buildings else "Unassigned")
     return templates.TemplateResponse(
         "entry_form.html",
-        {"request": request, "buildings": buildings, "selected_building": selected_building},
+        {
+            "request": request,
+            "buildings": buildings,
+            "selected_building": selected_building,
+        },
     )
 
 
@@ -117,8 +119,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
         # If the client prefers JSON (API client), return JSON
         if "application/json" in accept and "text/html" not in accept:
             return JSONResponse(
-                {"detail": "Not Found", "path": request.url.path},
-                status_code=404
+                {"detail": "Not Found", "path": request.url.path}, status_code=404
             )
         # Otherwise render your template
         return templates.TemplateResponse(
@@ -138,6 +139,7 @@ def get_building_options():
     conn.close()
     return rows or ["Unassigned"]
 
+
 def building_exists(name: str) -> bool:
     conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
@@ -146,7 +148,8 @@ def building_exists(name: str) -> bool:
     conn.close()
     return exists
 
-def ensure_building_exists(name: str|None) -> str:
+
+def ensure_building_exists(name: str | None) -> str:
     val = (name or "").strip() or "Unassigned"
     conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
@@ -154,7 +157,6 @@ def ensure_building_exists(name: str|None) -> str:
     conn.commit()
     conn.close()
     return val
-
 
 
 @app.get("/admin", response_class=HTMLResponse)
@@ -170,12 +172,14 @@ async def admin(request: Request):
         },
     )
 
+
 # --- Buildings CRUD-ish ---
 @app.post("/admin/buildings/add")
 async def admin_building_add(name: str = Form(...)):
     name = (name or "").strip() or "Unassigned"
     ensure_building_exists(name)
     return RedirectResponse("/admin", status_code=303)
+
 
 @app.post("/admin/buildings/rename")
 async def admin_building_rename(old_name: str = Form(...), new_name: str = Form(...)):
@@ -187,17 +191,21 @@ async def admin_building_rename(old_name: str = Form(...), new_name: str = Form(
     conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
     # Move entries
-    cur.execute("""
+    cur.execute(
+        """
         UPDATE entries
         SET building = ?
         WHERE COALESCE(NULLIF(building,''), 'Unassigned') = ?
-    """, (new, old))
+    """,
+        (new, old),
+    )
     # Update buildings table
     cur.execute("INSERT OR IGNORE INTO buildings(name) VALUES (?)", (new,))
     cur.execute("DELETE FROM buildings WHERE name = ?", (old,))
     conn.commit()
     conn.close()
     return RedirectResponse("/admin", status_code=303)
+
 
 @app.post("/admin/buildings/merge")
 async def admin_building_merge(source: str = Form(...), target: str = Form(...)):
@@ -208,16 +216,20 @@ async def admin_building_merge(source: str = Form(...), target: str = Form(...))
 
     conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
-    cur.execute("""
+    cur.execute(
+        """
         UPDATE entries
         SET building = ?
         WHERE COALESCE(NULLIF(building,''), 'Unassigned') = ?
-    """, (tgt, src))
+    """,
+        (tgt, src),
+    )
     cur.execute("INSERT OR IGNORE INTO buildings(name) VALUES (?)", (tgt,))
     cur.execute("DELETE FROM buildings WHERE name = ?", (src,))
     conn.commit()
     conn.close()
     return RedirectResponse("/admin", status_code=303)
+
 
 @app.post("/admin/buildings/delete")
 async def admin_building_delete(name: str = Form(...), reassign_to: str = Form(None)):
@@ -228,10 +240,13 @@ async def admin_building_delete(name: str = Form(...), reassign_to: str = Form(N
     cur = conn.cursor()
 
     # How many entries use this building?
-    cur.execute("""
+    cur.execute(
+        """
         SELECT COUNT(*) FROM entries
         WHERE COALESCE(NULLIF(building,''), 'Unassigned') = ?
-    """, (name,))
+    """,
+        (name,),
+    )
     count = cur.fetchone()[0]
 
     if count and not reassign:
@@ -241,15 +256,19 @@ async def admin_building_delete(name: str = Form(...), reassign_to: str = Form(N
         return RedirectResponse("/admin", status_code=303)
 
     if count and reassign:
-        cur.execute("""
+        cur.execute(
+            """
             UPDATE entries SET building = ?
             WHERE COALESCE(NULLIF(building,''), 'Unassigned') = ?
-        """, (reassign, name))
+        """,
+            (reassign, name),
+        )
 
     cur.execute("DELETE FROM buildings WHERE name = ?", (name,))
     conn.commit()
     conn.close()
     return RedirectResponse("/admin", status_code=303)
+
 
 # --- Export / Import ---
 @app.get("/admin/export")
@@ -259,11 +278,17 @@ async def admin_export():
     cur = conn.cursor()
     cur.execute("SELECT name FROM buildings ORDER BY name")
     buildings = [r[0] for r in cur.fetchall()]
-    cur.execute("SELECT hash, name, room, weights, admission_date, COALESCE(NULLIF(building,''), 'Unassigned') FROM entries")
+    cur.execute(
+        "SELECT hash, name, room, weights, admission_date, COALESCE(NULLIF(building,''), 'Unassigned') FROM entries"
+    )
     entries = [
         {
-            "hash": h, "name": n, "room": r, "weights": w,
-            "admission_date": d, "building": b
+            "hash": h,
+            "name": n,
+            "room": r,
+            "weights": w,
+            "admission_date": d,
+            "building": b,
         }
         for (h, n, r, w, d, b) in cur.fetchall()
     ]
@@ -275,7 +300,10 @@ async def admin_export():
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2)
 
-    return FileResponse(tmp, media_type="application/json", filename="weights_export.json")
+    return FileResponse(
+        tmp, media_type="application/json", filename="weights_export.json"
+    )
+
 
 @app.post("/admin/import")
 async def admin_import(file: UploadFile = File(...)):
@@ -288,7 +316,10 @@ async def admin_import(file: UploadFile = File(...)):
     cur = conn.cursor()
 
     for b in buildings:
-        cur.execute("INSERT OR IGNORE INTO buildings(name) VALUES (?)", (b.strip() or "Unassigned",))
+        cur.execute(
+            "INSERT OR IGNORE INTO buildings(name) VALUES (?)",
+            (b.strip() or "Unassigned",),
+        )
 
     for e in entries:
         h = e.get("hash")
@@ -301,27 +332,36 @@ async def admin_import(file: UploadFile = File(...)):
         # Upsert by hash (if hash collides, we overwrite the row for simplicity)
         cur.execute("SELECT 1 FROM entries WHERE hash=?", (h,))
         if cur.fetchone():
-            cur.execute("""
+            cur.execute(
+                """
                 UPDATE entries
                 SET name=?, room=?, weights=?, admission_date=?, building=?
                 WHERE hash=?
-            """, (name, room, weights, admission_date, building, h))
+            """,
+                (name, room, weights, admission_date, building, h),
+            )
         else:
-            cur.execute("""
+            cur.execute(
+                """
                 INSERT INTO entries(hash, name, room, weights, admission_date, building)
                 VALUES(?, ?, ?, ?, ?, ?)
-            """, (h, name, room, weights, admission_date, building))
+            """,
+                (h, name, room, weights, admission_date, building),
+            )
 
     conn.commit()
     conn.close()
     return RedirectResponse("/admin", status_code=303)
+
 
 # --- Maintenance tools ---
 @app.post("/admin/recalc-hashes")
 async def admin_recalc_hashes():
     conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
-    cur.execute("SELECT rowid, name, room, COALESCE(NULLIF(building,''),'Unassigned') FROM entries")
+    cur.execute(
+        "SELECT rowid, name, room, COALESCE(NULLIF(building,''),'Unassigned') FROM entries"
+    )
     rows = cur.fetchall()
     existing = set()
     cur.execute("SELECT hash FROM entries")
@@ -349,7 +389,6 @@ async def admin_recalc_hashes():
     conn.commit()
     conn.close()
     return RedirectResponse("/admin", status_code=303)
-
 
 
 @app.post("/add")
@@ -484,10 +523,13 @@ async def entries(request: Request, building: Optional[str] = None):
         formatted_entries.append(tuple(new_entry))
     return templates.TemplateResponse(
         "entries.html",
-        {"request": request, "entries": formatted_entries, "buildings": buildings, "selected_building": selected_building},
+        {
+            "request": request,
+            "entries": formatted_entries,
+            "buildings": buildings,
+            "selected_building": selected_building,
+        },
     )
-
-
 
 
 @app.post("/delete")
@@ -512,6 +554,7 @@ async def get_help(page: str):
         md_content = f.read()
     html = md.markdown(md_content)
     return JSONResponse({"html": html})
+
 
 @app.get("/report")
 async def generate_report(building: Optional[str] = None):
@@ -539,10 +582,18 @@ async def generate_report(building: Optional[str] = None):
     pdf.add_page()
     pdf.set_font("Arial", "B", 14)
     scope = f" -- {selected}" if selected else ""
-    report_title = f"Weight Report{scope} -- Generated {datetime.now().strftime('%B %-d, %Y')}"
+    report_title = (
+        f"Weight Report{scope} -- Generated {datetime.now().strftime('%B %-d, %Y')}"
+    )
     pdf.cell(0, 10, report_title, ln=True, align="C")
 
-    col_widths = {"name": 50, "room": 30, "admission_date": 40, "last_weight": 30, "weights": 40}
+    col_widths = {
+        "name": 50,
+        "room": 30,
+        "admission_date": 40,
+        "last_weight": 30,
+        "weights": 40,
+    }
 
     pdf.set_font("Arial", "B", 12)
     pdf.cell(col_widths["name"], 10, "Name", 1)
@@ -559,7 +610,9 @@ async def generate_report(building: Optional[str] = None):
         formatted_date = ""
         if admission_date:
             try:
-                formatted_date = datetime.strptime(admission_date, "%Y-%m-%d").strftime("%B %d")
+                formatted_date = datetime.strptime(admission_date, "%Y-%m-%d").strftime(
+                    "%B %d"
+                )
             except ValueError:
                 logger.warning(f"Date {admission_date} did not match %Y-%m-%d")
                 formatted_date = admission_date
