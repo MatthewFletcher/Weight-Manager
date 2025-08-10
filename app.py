@@ -514,8 +514,8 @@ async def generate_report(building: Optional[str] = None):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", "B", 14)
-    scope = f" — {selected}" if selected else ""
-    report_title = f"Weight Report{scope} — Generated {datetime.now().strftime('%B %-d, %Y')}"
+    scope = f" -- {selected}" if selected else ""
+    report_title = f"Weight Report{scope} -- Generated {datetime.now().strftime('%B %-d, %Y')}"
     pdf.cell(0, 10, report_title, ln=True, align="C")
 
     col_widths = {"name": 50, "room": 30, "admission_date": 40, "last_weight": 30, "weights": 40}
