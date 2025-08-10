@@ -271,7 +271,6 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 
-
 body {
   font-family: Arial, sans-serif;
   text-align: center;
@@ -310,6 +309,7 @@ button {
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
 button:hover {
@@ -335,8 +335,10 @@ pre {
   margin-bottom: 1em;
 }
 
-label[for$="building-select"] {
+label[for$="building-select"],
+label[for$="entries-building-select"] {
   margin-right: 0.5em;
+  font-weight: bold;
 }
 
 /* Building filter form styling */
@@ -346,29 +348,40 @@ label[for$="building-select"] {
   align-items: center;
   gap: 0.5em;
   margin-bottom: 1em;
-}
-
-#building-filter-form label,
-#entries-building-filter-form label {
-  font-weight: bold;
+  justify-content: center;
 }
 
 #building-filter-form select,
-#entries-building-filter-form select {
-  padding: 0.3em 0.6em;
+#entries-building-filter-form select,
+#building,
+#building-new {
+  padding: 0.4em 0.6em;
   border: 1px solid #ccc;
   border-radius: 4px;
+  font-size: 0.95em;
 }
 
 #building-new-filter,
-#entries-building-new-filter {
-  min-width: 14ch;
-  padding: 0.3em 0.6em;
+#entries-building-new-filter,
+#building-new {
+  min-width: 16ch;
+  padding: 0.4em 0.6em;
   border: 1px solid #ccc;
   border-radius: 4px;
+  font-size: 0.95em;
+  transition: opacity 0.2s ease, max-width 0.3s ease;
 }
 
-/* Optional: Match button styles if you add a submit button */
+#building-new-filter[style*="display:none"],
+#entries-building-new-filter[style*="display:none"],
+#building-new[style*="display:none"] {
+  opacity: 0;
+  max-width: 0;
+  padding: 0;
+  border: none;
+}
+
+/* Match button styles if you add a submit button */
 #building-filter-form button,
 #entries-building-filter-form button {
   padding: 0.4em 0.8em;
@@ -377,6 +390,7 @@ label[for$="building-select"] {
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
 #building-filter-form button:hover,
