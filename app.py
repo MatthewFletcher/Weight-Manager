@@ -59,25 +59,20 @@ def init_db():
 
 init_db()
 
-def get_building_options():
-    conn = sqlite3.connect(DATABASE)
-    cur = conn.cursor()
-    cur.execute("SELECT DISTINCT COALESCE(NULLIF(building, ''), 'Unassigned') FROM entries")
-    buildings = sorted([b[0] for b in cur.fetchall()])
-    conn.close()
-    # Always offer at least one option
-    return buildings or ["Unassigned"]
-
-
 
 @app.get("/", response_class=HTMLResponse)
 async def form(request: Request, building: Optional[str] = None):
+    # If user typed a brand-new building via the filter, add it so it shows up even with 0 entries
+    if building and not building_exists(building):
+        ensure_building_exists(building)
+
     buildings = get_building_options()
     selected_building = building or (buildings[0] if buildings else "Unassigned")
     return templates.TemplateResponse(
         "entry_form.html",
         {"request": request, "buildings": buildings, "selected_building": selected_building},
     )
+
 
 @app.get("/boom")
 def boom():
@@ -93,23 +88,44 @@ async def custom_500_handler(request: Request, exc: Exception):
     )
 
 
+def get_building_options():
+    conn = sqlite3.connect(DATABASE)
+    cur = conn.cursor()
+    cur.execute("SELECT name FROM buildings ORDER BY name COLLATE NOCASE")
+    rows = [r[0] for r in cur.fetchall()]
+    conn.close()
+    return rows or ["Unassigned"]
+
+def building_exists(name: str) -> bool:
+    conn = sqlite3.connect(DATABASE)
+    cur = conn.cursor()
+    cur.execute("SELECT 1 FROM buildings WHERE name = ?", (name,))
+    exists = cur.fetchone() is not None
+    conn.close()
+    return exists
+
+def ensure_building_exists(name: str) -> str:
+    val = (name or "").strip() or "Unassigned"
+    conn = sqlite3.connect(DATABASE)
+    cur = conn.cursor()
+    cur.execute("INSERT OR IGNORE INTO buildings(name) VALUES (?)", (val,))
+    conn.commit()
+    conn.close()
+    return val
+
+
+
 @app.post("/add")
 async def add_entry(
     name: str = Form(...),
     room: Optional[str] = Form(None),
     admission_date: str = Form(...),
     weight: float = Form(...),
-    building_select: Optional[str] = Form(None),
-    building_new: Optional[str] = Form(None),
+    building: Optional[str] = Form(None),
 ):
-    # decide final building value
-    if building_select == "__new__":
-        building_val = (building_new or "").strip() or "Unassigned"
-    else:
-        building_val = (building_select or "").strip() or "Unassigned"
-
+    building_val = ensure_building_exists(building)
     room_val = (room or "").strip()
-    h = entry_hash(name, room_val, building_val)
+    h = entry_hash(name, room_val, building_val)  # keep your 3-part hash
 
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
@@ -192,30 +208,30 @@ async def update_field(
 
 @app.get("/entries", response_class=HTMLResponse)
 async def entries(request: Request, building: Optional[str] = None):
+    if building and not building_exists(building):
+        ensure_building_exists(building)
+
     buildings = get_building_options()
     selected_building = building or (buildings[0] if buildings else "Unassigned")
 
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
-    if selected_building and selected_building != "All":
-        cursor.execute(
-            "SELECT hash, name, room, weights, admission_date FROM entries WHERE COALESCE(NULLIF(building,''),'Unassigned') = ?",
-            (selected_building,),
-        )
-    else:
-        cursor.execute("SELECT hash, name, room, weights, admission_date FROM entries")
+    cursor.execute(
+        """
+        SELECT hash, name, room, weights, admission_date
+        FROM entries
+        WHERE COALESCE(NULLIF(building,''),'Unassigned') = ?
+        """,
+        (selected_building,),
+    )
     rows = cursor.fetchall()
     conn.close()
 
     return templates.TemplateResponse(
         "entries.html",
-        {
-            "request": request,
-            "entries": rows,
-            "buildings": buildings,
-            "selected_building": selected_building,
-        },
+        {"request": request, "entries": rows, "buildings": buildings, "selected_building": selected_building},
     )
+
 
 
 
@@ -245,11 +261,18 @@ async def get_help(page: str):
 @app.get("/report")
 async def generate_report(building: Optional[str] = None):
     selected = (building or "").strip() or None
+    if selected and not building_exists(selected):
+        ensure_building_exists(selected)
+
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
     if selected:
         cursor.execute(
-            "SELECT name, room, weights, admission_date FROM entries WHERE COALESCE(NULLIF(building,''),'Unassigned') = ?",
+            """
+            SELECT name, room, weights, admission_date
+            FROM entries
+            WHERE COALESCE(NULLIF(building,''),'Unassigned') = ?
+            """,
             (selected,),
         )
     else:
