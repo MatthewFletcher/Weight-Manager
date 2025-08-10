@@ -2,106 +2,109 @@
 <html>
 
 <head>
-  <title>All Entries</title>
-  <link rel="stylesheet" href="/static/style.css">
-  <script src="/static/form.js"></script>
-  <script src="/static/help.js"></script>
-  <script src="/static/table.js"></script>
-  <script src="/static/tablesort.min.js"></script>
+    <title>All Entries</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/form.js"></script>
+    <script src="/static/help.js"></script>
+    <script src="/static/table.js"></script>
+    <script src="/static/tablesort.min.js"></script>
 </head>
 
 <body>
-  <div class="container">
-    <button id="help-btn" class="help-btn" title="Help">?</button>
-    <div id="help-modal" class="help-modal" style="display:none;">
-      <div class="help-modal-content">
-        <span id="help-close" class="help-close">&times;</span>
-        <div id="help-content">Loading...</div>
-      </div>
+    <div class="container">
+        <button id="help-btn" class="help-btn" title="Help">?</button>
+        <div id="help-modal" class="help-modal" style="display:none;">
+            <div class="help-modal-content">
+                <span id="help-close" class="help-close">&times;</span>
+                <div id="help-content">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Building Filter (top of page) -->
+        <form id="entries-building-filter-form" action="/entries" method="get" style="margin-bottom: 1em;">
+            <label for="entries-building-select">Building:</label>
+            <select id="entries-building-select" name="building">
+                {% for b in buildings %}
+                <option value="{{ b }}" {% if b==selected_building %}selected{% endif %}>{{ b }}</option>
+                {% endfor %}
+                <option value="__new__">Add new…</option>
+            </select>
+            <input type="text" id="entries-building-new-filter" placeholder="New building name"
+                style="display:none; margin-left:.5em;">
+            <noscript><button type="submit">Apply</button></noscript>
+        </form>
+
+
+        <h2>All Entries</h2>
+
+        <table id="entries-table">
+            <thead>
+                <tr>
+                    <th>
+                        <input type="checkbox" id="select-all-checkbox" title="Select/Deselect All">
+                    </th>
+                    <th>Name</th>
+                    <th data-sort-method="number">Room</th>
+                    <th>Admission Date</th>
+                    <th>Weights</th>
+                    <th>Add Weight</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in entries %}
+                <tr>
+                    <td>
+                        <input type="checkbox" name="delete_hashes" value="{{ entry[0] }}" class="entry-checkbox">
+                    </td>
+                    <td class="editable" data-hash="{{ entry[0] }}" data-field="name">{{ entry[1] }}</td>
+                    <td class="editable" data-hash="{{ entry[0] }}" data-field="room">
+                        {{ entry[2] if entry[2] else "N/A" }}
+                    </td>
+                    <td class="editable" data-hash="{{ entry[0] }}" data-field="admission_date">{{ entry[4] }}</td>
+                    <td class="weights-grid">
+                        {% set weight_list = entry[3].split(',') if entry[3] else [] %}
+                        {% set padded_weights = ([''] * (5 - weight_list|length)) + weight_list %}
+                        {% for w in padded_weights %}
+                        {% set idx = loop.index0 %}
+                        {% if w %}
+                        {% if loop.last %}
+                        <span class="weight-cell weight-latest" data-hash="{{ entry[0] }}" data-index="{{ idx }}"
+                            data-value="{{ w | int }}">{{ w | int }}</span>
+                        {% else %}
+                        <span class="weight-cell" data-hash="{{ entry[0] }}" data-index="{{ idx }}"
+                            data-value="{{ w | int }}">{{ w | int }}</span>
+                        {% endif %}
+                        {% else %}
+                        <span class="weight-cell" data-hash="{{ entry[0] }}" data-index="{{ idx }}"
+                            data-value=""></span>
+                        {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td>
+                        <form action="/add_weight/{{ entry[0] }}" method="post" id="add-weight-form-{{ entry[0] }}"
+                            class="add-weight-form"
+                            style="display:inline-flex; gap:0.5em; align-items:center; margin:0;">
+                            <input type="number" name="weight" step="0.1" required placeholder="New weight"
+                                style="padding:0.4em; border-radius:4px; border:1px solid #d2d2e6; width:90px;">
+                            <button type="submit" class="save-btn">Add Weight</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Standalone Delete Form (populated by JS) -->
+        <form action="/delete" method="post" id="delete-form" onsubmit="return collectCheckedEntries();">
+            <button type="submit" class="delete-btn" style="margin: 2em auto 0 auto; display: block;">Delete
+                Selected</button>
+        </form>
+
+        <div class="nav-links">
+            <a href="/?building={{ selected_building }}">Back to form</a> |
+            <a href="/report?building={{ selected_building }}">Generate PDF Report</a>
+        </div>
     </div>
-
-    <!-- Building Filter (top of page) -->
-    <form id="entries-building-filter-form" action="/entries" method="get" style="margin-bottom: 1em;">
-      <label for="entries-building-select">Building:</label>
-      <select id="entries-building-select" name="building">
-        {% for b in buildings %}
-        <option value="{{ b }}" {% if b==selected_building %}selected{% endif %}>{{ b }}</option>
-        {% endfor %}
-        <option value="__new__">Add new…</option>
-      </select>
-      <input type="text" id="entries-building-new-filter" placeholder="New building name"
-             style="display:none; margin-left:.5em;">
-      <noscript><button type="submit">Apply</button></noscript>
-    </form>
-
-    <h2>All Entries</h2>
-
-    <table id="entries-table">
-      <thead>
-        <tr>
-          <th>
-            <input type="checkbox" id="select-all-checkbox" title="Select/Deselect All">
-          </th>
-          <th>Name</th>
-          <th data-sort-method="number">Room</th>
-          <th>Admission Date</th>
-          <th>Weights</th>
-          <th>Add Weight</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for entry in entries %}
-        <tr>
-          <td>
-            <input type="checkbox" name="delete_hashes" value="{{ entry[0] }}" class="entry-checkbox">
-          </td>
-          <td class="editable" data-hash="{{ entry[0] }}" data-field="name">{{ entry[1] }}</td>
-          <td class="editable" data-hash="{{ entry[0] }}" data-field="room">
-            {{ entry[2] if entry[2] else "N/A" }}
-          </td>
-          <td class="editable" data-hash="{{ entry[0] }}" data-field="admission_date">{{ entry[4] }}</td>
-          <td class="weights-grid">
-            {% set weight_list = entry[3].split(',') if entry[3] else [] %}
-            {% set padded_weights = ([''] * (5 - weight_list|length)) + weight_list %}
-            {% for w in padded_weights %}
-            {% set idx = loop.index0 %}
-            {% if w %}
-              {% if loop.last %}
-              <span class="weight-cell weight-latest" data-hash="{{ entry[0] }}" data-index="{{ idx }}"
-                    data-value="{{ w | int }}">{{ w | int }}</span>
-              {% else %}
-              <span class="weight-cell" data-hash="{{ entry[0] }}" data-index="{{ idx }}"
-                    data-value="{{ w | int }}">{{ w | int }}</span>
-              {% endif %}
-            {% else %}
-              <span class="weight-cell" data-hash="{{ entry[0] }}" data-index="{{ idx }}" data-value=""></span>
-            {% endif %}
-            {% endfor %}
-          </td>
-          <td>
-            <form action="/add_weight/{{ entry[0] }}" method="post" id="add-weight-form-{{ entry[0] }}"
-                  class="add-weight-form"
-                  style="display:inline-flex; gap:0.5em; align-items:center; margin:0;">
-              <input type="number" name="weight" step="0.1" required placeholder="New weight"
-                     style="padding:0.4em; border-radius:4px; border:1px solid #d2d2e6; width:90px;">
-              <button type="submit" class="save-btn">Add Weight</button>
-            </form>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-
-    <!-- Standalone Delete Form (populated by JS) -->
-    <form action="/delete" method="post" id="delete-form" onsubmit="return collectCheckedEntries();">
-      <button type="submit" class="delete-btn" style="margin: 2em auto 0 auto; display: block;">Delete Selected</button>
-    </form>
-
-    <div class="nav-links">
-      <a href="/?building={{ selected_building }}">Back to form</a> |
-      <a href="/report?building={{ selected_building }}">Generate PDF Report</a>
-    </div>
-  </div>
 </body>
 
 </html>

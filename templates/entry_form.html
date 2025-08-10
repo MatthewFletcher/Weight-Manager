@@ -2,96 +2,97 @@
 <html>
 
 <head>
-  <title>Weight Entry Form Test</title>
+	<title>Weight Entry Form Test</title>
 
-  <script>
-    window.addWeightEntryMap = {
+	<script>
+		window.addWeightEntryMap = {
       {% for entry in entries %}
-      "{{ entry[0] }}": "add-weight-form-{{ entry[0] }}"{% if not loop.last %}, {% endif %}
-      {% endfor %}
+		"{{ entry[0] }}": "add-weight-form-{{ entry[0] }}"{% if not loop.last %}, {% endif %}
+		{% endfor %}
     };
-  </script>
+	</script>
 
-  <link rel="stylesheet" href="/static/style.css">
+	<link rel="stylesheet" href="/static/style.css">
 
-  <script src="/static/form.js"></script>
-  <script src="/static/help.js"></script>
-  <script src="/static/table.js"></script>
+	<script src="/static/form.js"></script>
+	<script src="/static/help.js"></script>
+	<script src="/static/table.js"></script>
 </head>
 
 <body>
-  <div class="container">
-    <button id="help-btn" class="help-btn" title="Help">?</button>
-    <div id="help-modal" class="help-modal" style="display:none;">
-      <div class="help-modal-content">
-        <span id="help-close" class="help-close">&times;</span>
-        <div id="help-content">Loading...</div>
-      </div>
-    </div>
+	<div class="container">
+		<button id="help-btn" class="help-btn" title="Help">?</button>
+		<div id="help-modal" class="help-modal" style="display:none;">
+			<div class="help-modal-content">
+				<span id="help-close" class="help-close">&times;</span>
+				<div id="help-content">Loading...</div>
+			</div>
+		</div>
 
-    <!-- Building Filter (top of page) -->
-    <form id="building-filter-form" action="/" method="get" style="margin-bottom: 1em;">
-      <label for="building-select">Building:</label>
-      <select id="building-select" name="building">
-        {% for b in buildings %}
-        <option value="{{ b }}" {% if b==selected_building %}selected{% endif %}>{{ b }}</option>
-        {% endfor %}
-        <option value="__new__">Add new…</option>
-      </select>
-      <input type="text" id="building-new-filter" placeholder="New building name"
-             style="display:none; margin-left:.5em;">
-      <noscript><button type="submit">Apply</button></noscript>
-    </form>
+		<!-- Building Filter (top of page) -->
+		<form id="building-filter-form" action="/" method="get" style="margin-bottom: 1em;">
+			<label for="building-select">Building:</label>
+			<select id="building-select" name="building">
+				{% for b in buildings %}
+				<option value="{{ b }}" {% if b==selected_building %}selected{% endif %}>{{ b }}</option>
+				{% endfor %}
+				<option value="__new__">Add new…</option>
+			</select>
+			<input type="text" id="building-new-filter" placeholder="New building name"
+				style="display:none; margin-left:.5em;">
+			<noscript><button type="submit">Apply</button></noscript>
+		</form>
 
-    <h2>Weight Entry Form</h2>
-    <form action="/add" method="post">
-      <table>
-        <tr>
-          <td><label for="name">Name:</label></td>
-          <td><input id="name" type="text" name="name" required></td>
-        </tr>
-        <tr>
-          <td><label for="room">Room Number:</label></td>
-          <td><input id="room" type="text" name="room"></td>
-        </tr>
-        <tr>
-          <td><label for="admission_date">Admission Date:</label></td>
-          <td style="display: flex; align-items: center; gap: 0.5em;">
-            <input id="admission_date" type="date" name="admission_date" required>
-            <button type="button" id="today-btn" style="padding: 0.5em 1em;">Today</button>
-          </td>
-        </tr>
-        <tr>
-          <td><label for="weight">Weight:</label></td>
-          <td><input id="weight" type="number" step="0.1" name="weight" required></td>
-        </tr>
-        <!-- Building chooser in Add Entry form -->
-        <tr>
-          <td><label for="building">Building:</label></td>
-          <td style="display:flex; gap:.5em; align-items:center;">
-            <select id="building" name="building" required>
-              {% for b in buildings %}
-              <option value="{{ b }}" {% if b==selected_building %}selected{% endif %}>{{ b }}</option>
-              {% endfor %}
-              <option value="__new__">Add new…</option>
-            </select>
-            <input type="text" id="building-new" name="building_new"
-                   placeholder="New building name" style="display:none;">
-          </td>
-        </tr>
-        <tr>
-          <td colspan="2" style="text-align: center;">
-            <button type="submit">Add Entry</button>
-          </td>
-        </tr>
-      </table>
-    </form>
 
-    <div class="nav-links">
-      <a href="/entries?building={{ selected_building }}">View All Entries</a> |
-      <a href="/report?building={{ selected_building }}">Generate PDF Report</a>
-    </div>
-  </div>
+		<h2>Weight Entry Form</h2>
+		<form action="/add" method="post">
+			<table>
+				<tr>
+					<td><label for="name">Name:</label></td>
+					<td><input id="name" type="text" name="name" required></td>
+				</tr>
+				<tr>
+					<td><label for="room">Room Number:</label></td>
+					<td><input id="room" type="text" name="room"></td>
+				</tr>
+				<tr>
+					<td><label for="admission_date">Admission Date:</label></td>
+					<td style="display: flex; align-items: center; gap: 0.5em;">
+						<input id="admission_date" type="date" name="admission_date" required>
+						<button type="button" id="today-btn" style="padding: 0.5em 1em;">Today</button>
+					</td>
+				</tr>
+				<tr>
+					<td><label for="weight">Weight:</label></td>
+					<td><input id="weight" type="number" step="0.1" name="weight" required></td>
+				</tr>
+				<!-- Building chooser in Add Entry form -->
+				<tr>
+					<td><label for="building">Building:</label></td>
+					<td style="display:flex; gap:.5em; align-items:center;">
+						<select id="building" name="building" required>
+							{% for b in buildings %}
+							<option value="{{ b }}" {% if b==selected_building %}selected{% endif %}>{{ b }}</option>
+							{% endfor %}
+							<option value="__new__">Add new…</option>
+						</select>
+						<input type="text" id="building-new" name="building_new" placeholder="New building name"
+							style="display:none;">
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2" style="text-align: center;">
+						<button type="submit">Add Entry</button>
+					</td>
+				</tr>
+			</table>
+		</form>
+
+		<div class="nav-links">
+			<a href="/entries?building={{ selected_building }}">View All Entries</a> |
+			<a href="/report?building={{ selected_building }}">Generate PDF Report</a>
+		</div>
+	</div>
 </body>
 
 </html>
