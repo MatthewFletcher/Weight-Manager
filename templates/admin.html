@@ -1,19 +1,26 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Admin</title>
-  <link rel="stylesheet" href="/static/style.css">
-  <!-- HTMX via CDN -->
-  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
-  <script src="/static/form.js"></script>
-</head>
-<body>
-  <div class="container" style="max-width: 1000px; margin: 0 auto; text-align: left;">
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container" style="max-width: 1000px; margin: 0 auto; text-align: left;">
+
+  <!-- Simple client-side password gate -->
+  <section id="password-container" class="admin-card" style="text-align:center;">
+    <h2>Admin Access</h2>
+    <p>Please enter the password to view admin tools:</p>
+    <input type="password" id="admin-password" placeholder="Enter password" style="padding:.5em; border:1px solid #ccc; border-radius:6px;">
+    <button type="button" onclick="checkPassword()">Submit</button>
+    <p class="muted" style="margin-top:.5rem;">This is a casual blocker, not real security.</p>
+  </section>
+
+  <!-- Admin content (hidden until password accepted) -->
+  <div id="admin-content" style="display:none;">
+
     <h2 style="text-align:center;">Admin</h2>
 
     <!-- Buildings -->
     <section class="admin-card">
       <h3>Buildings</h3>
+
       <form action="/admin/buildings/add" method="post" class="inline-form">
         <label for="building-add">Add new:</label>
         <input id="building-add" name="name" type="text" placeholder="e.g., East Wing" required>
@@ -100,17 +107,35 @@
       <a href="/entries">All Entries</a>
     </div>
   </div>
+</div>
 
-  <script>
-    function confirmDeleteBuilding(form) {
-      const name = form.name.value;
-      const reassign = form.reassign_to.value;
-      return confirm(
-        reassign
-          ? `Delete "${name}" and reassign its entries to "${reassign}"?`
-          : `Delete "${name}" with NO reassignment? Any entries in this building will block deletion.\n\nProceed?`
-      );
+<!-- Optional: HTMX via CDN (not required for this page, but harmless to include) -->
+<script src="https://unpkg.com/htmx.org@1.9.12"></script>
+<script>
+  // casual blocker password
+  const ADMIN_PASSWORD = "letmein";
+
+  function checkPassword() {
+    const pw = document.getElementById('admin-password').value;
+    if (pw === ADMIN_PASSWORD) {
+      document.getElementById('password-container').style.display = 'none';
+      document.getElementById('admin-content').style.display = 'block';
+      // focus first useful control
+      const first = document.querySelector('#admin-content input, #admin-content select, #admin-content button, #admin-content a.button-like');
+      if (first) first.focus();
+    } else {
+      alert("Incorrect password.");
     }
-  </script>
-</body>
-</html>
+  }
+
+  function confirmDeleteBuilding(form) {
+    const name = form.name.value;
+    const reassign = form.reassign_to.value;
+    return confirm(
+      reassign
+        ? `Delete "${name}" and reassign its entries to "${reassign}"?`
+        : `Delete "${name}" with NO reassignment? Any entries in this building will block deletion.\n\nProceed?`
+    );
+  }
+</script>
+{% endblock %}
