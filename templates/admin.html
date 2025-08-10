@@ -32,7 +32,7 @@
           <form action="/admin/buildings/rename" method="post" class="inline-form">
             <select name="old_name" required>
               {% for b in buildings %}
-                <option value="{{ b }}">{{ b }} ({{ counts.get(b, 0) }})</option>
+                <option value="{{ b }}">{{ b }} ({{ counts.get(b, 0) }} entries)</option>
               {% endfor %}
             </select>
             <span>→</span>
@@ -47,13 +47,13 @@
             <label>From</label>
             <select name="source" required>
               {% for b in buildings %}
-                <option value="{{ b }}">{{ b }} ({{ counts.get(b, 0) }})</option>
+                <option value="{{ b }}">{{ b }} ({{ counts.get(b, 0) }}entries)</option>
               {% endfor %}
             </select>
             <label>into</label>
             <select name="target" required>
               {% for b in buildings %}
-                <option value="{{ b }}">{{ b }} ({{ counts.get(b, 0) }})</option>
+                <option value="{{ b }}">{{ b }} ({{ counts.get(b, 0) }}entries)</option>
               {% endfor %}
             </select>
             <button type="submit">Merge</button>
@@ -65,7 +65,7 @@
       <form action="/admin/buildings/delete" method="post" class="inline-form" onsubmit="return confirmDeleteBuilding(this);">
         <select name="name" required>
           {% for b in buildings %}
-            <option value="{{ b }}">{{ b }} ({{ counts.get(b, 0) }})</option>
+            <option value="{{ b }}">{{ b }} ({{ counts.get(b, 0) }} entries)</option>
           {% endfor %}
         </select>
         <span>reassign to</span>

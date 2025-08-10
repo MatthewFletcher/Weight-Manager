@@ -9,6 +9,7 @@
 - **Sorting:** Click on a column header to sort the table by that column (except for the checkbox and Add Weight columns).
 - **Deleting Entries:** To delete one or more entries, check the boxes next to those entries and click **Delete Selected** at the bottom.
 - **PDF Report:** Use **Generate PDF Report** to create a printable summary of the current entries.
+- You can switch between buildings using the drop down menu at the top of the page. 
 
 ---
 
