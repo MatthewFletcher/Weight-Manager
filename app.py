@@ -8,6 +8,9 @@ from fastapi import FastAPI, Request, Form, Body
 from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from fpdf import FPDF
 from fastapi import Form, Request
 from fastapi.responses import JSONResponse, FileResponse
@@ -104,6 +107,27 @@ async def custom_500_handler(request: Request, exc: Exception):
     return templates.TemplateResponse(
         "500.html", {"request": request, "traceback": tb_str}, status_code=500
     )
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    # Handle 404 with a friendly HTML page for browsers
+    if exc.status_code == 404:
+        accept = request.headers.get("accept", "")
+        # If the client prefers JSON (API client), return JSON
+        if "application/json" in accept and "text/html" not in accept:
+            return JSONResponse(
+                {"detail": "Not Found", "path": request.url.path},
+                status_code=404
+            )
+        # Otherwise render your template
+        return templates.TemplateResponse(
+            "404.html",
+            {"request": request, "path": request.url.path},
+            status_code=404,
+        )
+    # Let other HTTP errors fall back to default JSON
+    return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
 
 
 def get_building_options():
