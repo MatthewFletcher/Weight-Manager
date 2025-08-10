@@ -3,15 +3,15 @@
 {% block content %}
 <div class="container" style="max-width: 1000px; margin: 0 auto;">
 
-  <!-- Password prompt styled like the rest of the admin cards -->
-  <section id="password-container" class="admin-card">
-    <h2 style="text-align:center;">Admin Access</h2>
-    <p style="text-align:center;">Please enter the password to view admin tools:</p>
-    <div class="inline-form" style="justify-content:center;">
-      <input type="password" id="admin-password" placeholder="Enter password" required>
-      <button type="button" onclick="checkPassword()">Submit</button>
-    </div>
-  </section>
+<!-- Password prompt styled like the rest of the admin cards -->
+<section id="password-container" class="admin-card">
+  <h2 style="text-align:center;">Admin Access</h2>
+  <p style="text-align:center;">Please enter the password to view admin tools:</p>
+  <form class="inline-form" style="justify-content:center;" onsubmit="checkPassword(); return false;">
+    <input type="password" id="admin-password" placeholder="Enter password" required>
+    <button type="submit">Submit</button>
+  </form>
+</section>
 
   <!-- Admin content (hidden until password accepted) -->
   <div id="admin-content" style="display:none;">
