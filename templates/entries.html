@@ -60,10 +60,7 @@
                     <td class="editable" data-hash="{{ entry[0] }}" data-field="room">
                         {{ entry[2] if entry[2] else "N/A" }}
                     </td>
-                    {% set date_obj = entry[4] | datetime.strptime('%Y-%m-%d') %}
-                    <td class="editable" data-hash="{{ entry[0] }}" data-field="admission_date">
-                        {{ date_obj.strftime('%B %d, %Y') }}
-                    </td>
+                    <td class="editable" data-hash="{{ entry[0] }}" data-field="admission_date">{{ entry[4] }}</td>
                     <td class="weights-grid">
                         {% set weight_list = entry[3].split(',') if entry[3] else [] %}
                         {% set padded_weights = ([''] * (5 - weight_list|length)) + weight_list %}

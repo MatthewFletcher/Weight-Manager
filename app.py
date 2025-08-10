@@ -122,7 +122,7 @@ def building_exists(name: str) -> bool:
     conn.close()
     return exists
 
-def ensure_building_exists(name: str) -> str:
+def ensure_building_exists(name: str|None) -> str:
     val = (name or "").strip() or "Unassigned"
     conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
@@ -437,12 +437,30 @@ async def entries(request: Request, building: Optional[str] = None):
         """,
         (selected_building,),
     )
-    rows = cursor.fetchall()
+    entries = cursor.fetchall()
     conn.close()
+    formatted_entries = []
+    for entry in entries:
+        # entry is probably a tuple — adjust indices as needed
+        admission_date = entry[4]
+        if admission_date:
+            try:
+                # if it's a string like '2025-08-10'
+                date_obj = datetime.strptime(admission_date, "%Y-%m-%d")
+                formatted_date = date_obj.strftime("%B %d")  # 'August 10'
+            except ValueError:
+                # if already datetime or wrong format, just leave as-is
+                formatted_date = admission_date
+        else:
+            formatted_date = ""
 
+        # make a new tuple with the formatted date in place of old date
+        new_entry = list(entry)
+        new_entry[4] = formatted_date
+        formatted_entries.append(tuple(new_entry))
     return templates.TemplateResponse(
         "entries.html",
-        {"request": request, "entries": rows, "buildings": buildings, "selected_building": selected_building},
+        {"request": request, "entries": formatted_entries, "buildings": buildings, "selected_building": selected_building},
     )
 
 
