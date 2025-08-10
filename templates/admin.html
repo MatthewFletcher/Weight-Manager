@@ -101,6 +101,9 @@
       <p class="muted">Rebuilds hashes from name/room/building with collision protection.</p>
     </section>
 
+    <button type="button" onclick="adminLogout()">Lock Admin</button>
+
+
     <div class="nav-links" style="text-align:center;">
       <a href="/">Back to form</a> |
       <a href="/entries">All Entries</a>
@@ -111,15 +114,50 @@
 <script>
   const ADMIN_PASSWORD = "letmein";
 
+  const ADMIN_UNLOCK_MINUTES = 15; // <-- change N here
+  const ADMIN_UNLOCK_KEY = "adminUnlockUntil";
+
+  function unlockUI() {
+    document.getElementById('password-container').style.display = 'none';
+    document.getElementById('admin-content').style.display = 'block';
+  }
+
+  function lockUI() {
+    document.getElementById('password-container').style.display = 'block';
+    document.getElementById('admin-content').style.display = 'none';
+  }
+
   function checkPassword() {
     const pw = document.getElementById('admin-password').value;
     if (pw === ADMIN_PASSWORD) {
-      document.getElementById('password-container').style.display = 'none';
-      document.getElementById('admin-content').style.display = 'block';
+      const until = Date.now() + ADMIN_UNLOCK_MINUTES * 60 * 1000;
+      localStorage.setItem(ADMIN_UNLOCK_KEY, String(until));
+      unlockUI();
     } else {
       alert("Incorrect password.");
     }
   }
+
+  function tryAutoUnlock() {
+    const raw = localStorage.getItem(ADMIN_UNLOCK_KEY);
+    const until = raw ? parseInt(raw, 10) : 0;
+    if (until && Date.now() < until) {
+      unlockUI();
+    } else {
+      // expired or missing
+      localStorage.removeItem(ADMIN_UNLOCK_KEY);
+      lockUI();
+    }
+  }
+
+  // Optional: a logout button could call this
+  function adminLogout() {
+    localStorage.removeItem(ADMIN_UNLOCK_KEY);
+    lockUI();
+  }
+
+  // On page load, attempt auto-unlock
+  document.addEventListener("DOMContentLoaded", tryAutoUnlock);
 
   function confirmDeleteBuilding(form) {
     const name = form.name.value;
