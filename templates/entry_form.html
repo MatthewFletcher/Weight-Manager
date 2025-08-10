@@ -7,7 +7,7 @@
 	<script>
 		window.addWeightEntryMap = {
     	{% for entry in entries %}
-			"{{ entry[0] }}": "add-weight-form-{{ entry[0] }}"{% if not loop.last %}, {% endif %}
+		"{{ entry[0] }}": "add-weight-form-{{ entry[0] }}"{% if not loop.last %}, {% endif %}
 		{% endfor %}
 		};
 	</script>
@@ -28,6 +28,16 @@
 				<div id="help-content">Loading...</div>
 			</div>
 		</div>
+		<form action="/" method="get" style="margin-bottom: 1em;">
+			<label for="building-select">Building:</label>
+			<select id="building-select" name="building" onchange="this.form.submit()">
+				{% for b in buildings %}
+				<option value="{{ b }}" {% if b==selected_building %}selected{% endif %}>{{ b }}</option>
+				{% endfor %}
+			</select>
+			<noscript><button type="submit">Apply</button></noscript>
+		</form>
+
 		<h2>Weight Entry Form</h2>
 		<form action="/add" method="post">
 			<table>
@@ -51,6 +61,16 @@
 					<td><input id="weight" type="number" step="0.1" name="weight" required></td>
 				</tr>
 				<tr>
+					<td><label for="building">Building:</label></td>
+					<td>
+						<select id="building" name="building" required>
+							{% for b in buildings %}
+							<option value="{{ b }}" {% if b==selected_building %}selected{% endif %}>{{ b }}</option>
+							{% endfor %}
+						</select>
+					</td>
+				</tr>
+				<tr>
 					<td colspan="2" style="text-align: center;">
 						<button type="submit">Add Entry</button>
 					</td>
@@ -59,8 +79,8 @@
 		</form>
 
 		<div class="nav-links">
-			<a href="/entries">View All Entries</a> |
-			<a href="/report">Generate PDF Report</a>
+			<a href="/entries?building={{ selected_building }}">View All Entries</a> |
+			<a href="/report?building={{ selected_building }}">Generate PDF Report</a>
 		</div>
 	</div>
 </body>

@@ -19,6 +19,16 @@
                 <div id="help-content">Loading...</div>
             </div>
         </div>
+        <form action="/entries" method="get" style="margin-bottom: 1em;">
+            <label for="entries-building-select">Building:</label>
+            <select id="entries-building-select" name="building" onchange="this.form.submit()">
+                {% for b in buildings %}
+                <option value="{{ b }}" {% if b==selected_building %}selected{% endif %}>{{ b }}</option>
+                {% endfor %}
+            </select>
+            <noscript><button type="submit">Apply</button></noscript>
+        </form>
+
         <h2>All Entries</h2>
 
         <table id="entries-table">
@@ -80,7 +90,8 @@
 
         <!-- Standalone Delete Form (populated by JS) -->
         <form action="/delete" method="post" id="delete-form" onsubmit="return collectCheckedEntries();">
-            <button type="submit" class="delete-btn" style="margin: 2em auto 0 auto; display: block;">Delete Selected</button>
+            <button type="submit" class="delete-btn" style="margin: 2em auto 0 auto; display: block;">Delete
+                Selected</button>
         </form>
 
         <div class="nav-links">
@@ -89,4 +100,5 @@
         </div>
     </div>
 </body>
+
 </html>

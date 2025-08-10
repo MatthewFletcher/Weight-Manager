@@ -35,8 +35,8 @@ os.makedirs(os.path.dirname(DATABASE), exist_ok=True)
 
 
 # Entry hash: hash of name and room (or "N/A" if room is blank)
-def entry_hash(name: str, room: Optional[str]) -> str:
-    key = f"{name.strip()}::{(room or '').strip() or 'N/A'}"
+def entry_hash(name: str, room: Optional[str], building: Optional[str]) -> str:
+    key = f"{name.strip()}::{(room or '').strip() or 'N/A'}::{(building or '').strip() or 'Unassigned'}"
     return hashlib.sha256(key.encode()).hexdigest()[:12]
 
 
@@ -59,10 +59,25 @@ def init_db():
 
 init_db()
 
+def get_building_options():
+    conn = sqlite3.connect(DATABASE)
+    cur = conn.cursor()
+    cur.execute("SELECT DISTINCT COALESCE(NULLIF(building, ''), 'Unassigned') FROM entries")
+    buildings = sorted([b[0] for b in cur.fetchall()])
+    conn.close()
+    # Always offer at least one option
+    return buildings or ["Unassigned"]
+
+
 
 @app.get("/", response_class=HTMLResponse)
-async def form(request: Request):
-    return templates.TemplateResponse("entry_form.html", {"request": request})
+async def form(request: Request, building: Optional[str] = None):
+    buildings = get_building_options()
+    selected_building = building or (buildings[0] if buildings else "Unassigned")
+    return templates.TemplateResponse(
+        "entry_form.html",
+        {"request": request, "buildings": buildings, "selected_building": selected_building},
+    )
 
 @app.get("/boom")
 def boom():
@@ -84,9 +99,12 @@ async def add_entry(
     room: Optional[str] = Form(None),
     admission_date: str = Form(...),
     weight: float = Form(...),
+    building: Optional[str] = Form(None),
 ):
+    building_val = (building or "").strip() or "Unassigned"
     room_val = (room or "").strip()
-    h = entry_hash(name, room_val)
+    h = entry_hash(name, room_val, building_val)
+
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
     cursor.execute("SELECT weights FROM entries WHERE hash=?", (h,))
@@ -95,17 +113,18 @@ async def add_entry(
         weights = row[0].split(",") + [str(weight)]
         weights = weights[-5:]
         cursor.execute(
-            "UPDATE entries SET weights=?, admission_date=? WHERE hash=?",
-            (",".join(weights), admission_date, h),
+            "UPDATE entries SET weights=?, admission_date=?, building=? WHERE hash=?",
+            (",".join(weights), admission_date, building_val, h),
         )
     else:
         cursor.execute(
-            "INSERT INTO entries (hash, name, room, weights, admission_date) VALUES (?, ?, ?, ?, ?)",
-            (h, name.strip(), room_val, str(weight), admission_date),
+            "INSERT INTO entries (hash, name, room, weights, admission_date, building) VALUES (?, ?, ?, ?, ?, ?)",
+            (h, name.strip(), room_val, str(weight), admission_date, building_val),
         )
     conn.commit()
     conn.close()
-    return RedirectResponse("/", status_code=303)
+    # keep the building in the redirect so the form stays on that building
+    return RedirectResponse(f"/?building={building_val}", status_code=303)
 
 
 @app.post("/add_weight/{entry_hash}")
@@ -167,15 +186,32 @@ async def update_field(
 
 
 @app.get("/entries", response_class=HTMLResponse)
-async def entries(request: Request):
+async def entries(request: Request, building: Optional[str] = None):
+    buildings = get_building_options()
+    selected_building = building or (buildings[0] if buildings else "Unassigned")
+
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
-    cursor.execute("SELECT hash, name, room, weights, admission_date FROM entries")
+    if selected_building and selected_building != "All":
+        cursor.execute(
+            "SELECT hash, name, room, weights, admission_date FROM entries WHERE COALESCE(NULLIF(building,''),'Unassigned') = ?",
+            (selected_building,),
+        )
+    else:
+        cursor.execute("SELECT hash, name, room, weights, admission_date FROM entries")
     rows = cursor.fetchall()
     conn.close()
+
     return templates.TemplateResponse(
-        "entries.html", {"request": request, "entries": rows}
+        "entries.html",
+        {
+            "request": request,
+            "entries": rows,
+            "buildings": buildings,
+            "selected_building": selected_building,
+        },
     )
+
 
 
 @app.post("/delete")
@@ -201,29 +237,29 @@ async def get_help(page: str):
     html = md.markdown(md_content)
     return JSONResponse({"html": html})
 
-
 @app.get("/report")
-async def generate_report():
+async def generate_report(building: Optional[str] = None):
+    selected = (building or "").strip() or None
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
-    cursor.execute("SELECT name, room, weights, admission_date FROM entries")
+    if selected:
+        cursor.execute(
+            "SELECT name, room, weights, admission_date FROM entries WHERE COALESCE(NULLIF(building,''),'Unassigned') = ?",
+            (selected,),
+        )
+    else:
+        cursor.execute("SELECT name, room, weights, admission_date FROM entries")
     rows = cursor.fetchall()
     conn.close()
 
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", "B", 14)
-    report_title = f"Weight Report -- Generated {datetime.now().strftime('%B %d, %Y')}"
+    scope = f" — {selected}" if selected else ""
+    report_title = f"Weight Report{scope} — Generated {datetime.now().strftime('%B %d, %Y')}"
     pdf.cell(0, 10, report_title, ln=True, align="C")
 
-    # Adjusted column widths to fit within 190mm total
-    col_widths = {
-        "name": 50,
-        "room": 30,
-        "admission_date": 40,
-        "last_weight": 30,
-        "weights": 40
-    }
+    col_widths = {"name": 50, "room": 30, "admission_date": 40, "last_weight": 30, "weights": 40}
 
     pdf.set_font("Arial", "B", 12)
     pdf.cell(col_widths["name"], 10, "Name", 1)
@@ -237,19 +273,19 @@ async def generate_report():
         last_weight = weights.split(",")[-1]
         pdf.cell(col_widths["name"], 10, name, 1)
         pdf.cell(col_widths["room"], 10, room or "N/A", 1)
-        # Format admission_date as "Month Day" (e.g., August 8)
         formatted_date = ""
         if admission_date:
             try:
                 formatted_date = datetime.strptime(admission_date, "%Y-%m-%d").strftime("%B %d")
             except ValueError:
-                formatted_date = admission_date  # fallback in case format is off
+                logger.warning(f"Date {admission_date} did not match %Y-%m-%d")
+                formatted_date = admission_date
         pdf.cell(col_widths["admission_date"], 10, formatted_date, 1)
         pdf.cell(col_widths["last_weight"], 10, str(int(float(last_weight))), 1)
-        pdf.cell(col_widths["weights"], 10, "", 1, ln=True) 
+        pdf.cell(col_widths["weights"], 10, "", 1, ln=True)
 
     os.makedirs(os.path.dirname(REPORT_PATH), exist_ok=True)
     pdf.output(REPORT_PATH)
-    return FileResponse(
-        REPORT_PATH, media_type="application/pdf", filename="weight_report.pdf"
-    )
+    # keep the building on the download route so your UI can preserve selection
+    filename = f"weight_report{('-' + selected) if selected else ''}.pdf"
+    return FileResponse(REPORT_PATH, media_type="application/pdf", filename=filename)

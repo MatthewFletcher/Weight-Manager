@@ -9,20 +9,24 @@ body {
 .container {
   background: #fff;
   padding: 2em 2.5em;
-  max-width: 900px; /* Increased for table fit */
+  max-width: 900px;
+  /* Increased for table fit */
   margin: 3em auto 0 auto;
   border-radius: 12px;
-  box-shadow: 0 2px 16px rgba(60,60,90,0.10);
-  overflow-x: auto; /* allow table scroll */
+  box-shadow: 0 2px 16px rgba(60, 60, 90, 0.10);
+  overflow-x: auto;
+  /* allow table scroll */
   min-width: 340px;
 }
+
 h2 {
   text-align: center;
   color: #3a3a4d;
 }
 
 /* ============ Table Styles ============ */
-table, #entries-table {
+table,
+#entries-table {
   width: 100%;
   min-width: 700px;
   border-collapse: collapse;
@@ -31,21 +35,26 @@ table, #entries-table {
   background: #fafaff;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 1px 4px rgba(60,60,90,0.05);
+  box-shadow: 0 1px 4px rgba(60, 60, 90, 0.05);
 }
-th, td {
+
+th,
+td {
   padding: 0.7em 0.9em;
   text-align: left;
   vertical-align: middle;
 }
+
 th {
   background: #e7ebf8;
   color: #4a4a60;
   font-weight: bold;
 }
+
 tr:nth-child(even) {
   background: #f1f3fa;
 }
+
 tr:hover {
   background: #dde8ff;
 }
@@ -55,17 +64,21 @@ tr:hover {
   .container {
     padding: 0.7em 0.3em;
   }
-  table, #entries-table {
+
+  table,
+  #entries-table {
     min-width: 550px;
   }
 }
 
 /* ============ Weights Grid & Cells ============ */
 .weights-grid {
-  display: flex;           /* grid->flex for better mobile scroll */
+  display: flex;
+  /* grid->flex for better mobile scroll */
   gap: 0.3em;
   align-items: center;
 }
+
 .weight-cell {
   display: inline-block;
   min-width: 2.3em;
@@ -78,6 +91,7 @@ tr:hover {
   text-align: center;
   margin-right: 0.1em;
 }
+
 .weight-cell.weight-latest {
   background: #def;
   border-color: #b9e;
@@ -86,16 +100,21 @@ tr:hover {
 }
 
 /* ============ Editable Fields ============ */
-.editable { 
-  cursor: pointer; 
-  background: #f4f8ff; 
+.editable {
+  cursor: pointer;
+  background: #f4f8ff;
   border-radius: 4px;
   transition: background 0.15s;
 }
-.editable input { width: 90%; font-size: 1em; }
+
+.editable input {
+  width: 90%;
+  font-size: 1em;
+}
 
 /* ============ Add/Save/Cancel Buttons ============ */
-button, .save-btn {
+button,
+.save-btn {
   padding: 0.7em 1.5em;
   font-size: 1em;
   border-radius: 5px;
@@ -110,7 +129,9 @@ button, .save-btn {
   margin-right: auto;
   transition: background 0.2s;
 }
-button:hover, .save-btn:hover {
+
+button:hover,
+.save-btn:hover {
   background: #d32f2f;
 }
 
@@ -120,9 +141,11 @@ button:hover, .save-btn:hover {
   padding: 0.4em 0.8em;
   border-radius: 4px;
 }
+
 .save-btn:hover {
   background: #269e52;
 }
+
 .cancel-btn {
   background: #f4f4f4;
   border: none;
@@ -131,9 +154,11 @@ button:hover, .save-btn:hover {
   margin-left: 0.4em;
   cursor: pointer;
 }
+
 .cancel-btn:hover {
   background: #d4d4d4;
 }
+
 .add-weight-btn {
   background: #4f8cff;
   color: white;
@@ -143,9 +168,11 @@ button:hover, .save-btn:hover {
   font-size: 1em;
   cursor: pointer;
 }
+
 .add-weight-btn:hover {
   background: #3065d4;
 }
+
 .add-weight-form {
   display: inline-flex;
   align-items: center;
@@ -166,6 +193,7 @@ input[type="checkbox"] {
   margin-top: 2em;
   text-align: center;
 }
+
 .nav-links a {
   margin: 0 1em;
   color: #4f8cff;
@@ -173,6 +201,7 @@ input[type="checkbox"] {
   font-weight: bold;
   transition: color 0.2s;
 }
+
 .nav-links a:hover {
   color: #3065d4;
 }
@@ -192,6 +221,7 @@ input[type="checkbox"] {
   cursor: pointer;
   z-index: 200;
 }
+
 .help-modal {
   display: none;
   position: fixed;
@@ -201,8 +231,9 @@ input[type="checkbox"] {
   width: 100%;
   height: 100%;
   overflow: auto;
-  background-color: rgba(0,0,0,0.2);
+  background-color: rgba(0, 0, 0, 0.2);
 }
+
 .help-modal-content {
   background-color: #fff;
   margin: 5% auto;
@@ -210,9 +241,10 @@ input[type="checkbox"] {
   border-radius: 10px;
   width: 90%;
   max-width: 500px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.13);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.13);
   position: relative;
 }
+
 .help-close {
   color: #aaa;
   position: absolute;
@@ -222,7 +254,10 @@ input[type="checkbox"] {
   font-weight: bold;
   cursor: pointer;
 }
-.help-close:hover { color: #3065d4; }
+
+.help-close:hover {
+  color: #3065d4;
+}
 
 /* ============ Misc Inputs ============ */
 /* Hide spinners/arrows for all number inputs */
@@ -231,64 +266,75 @@ input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
+
 input[type="number"] {
   -moz-appearance: textfield;
 }
 
 
 body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    padding: 5%;
-    background-color: #f8f8f8;
-    margin: 0;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  padding: 5%;
+  background-color: #f8f8f8;
+  margin: 0;
 }
 
 .error-box {
-    background-color: #fff;
-    padding: 2em;
-    border: 1px solid #ccc;
-    box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
-    display: inline-block;
-    max-width: 800px;
-    margin: auto;
-    border-radius: 8px;
+  background-color: #fff;
+  padding: 2em;
+  border: 1px solid #ccc;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  display: inline-block;
+  max-width: 800px;
+  margin: auto;
+  border-radius: 8px;
 }
 
 h1 {
-    color: #c0392b;
-    font-size: 2em;
-    margin-bottom: 0.5em;
+  color: #c0392b;
+  font-size: 2em;
+  margin-bottom: 0.5em;
 }
 
 p {
-    color: #333;
-    font-size: 1.2em;
+  color: #333;
+  font-size: 1.2em;
 }
 
 button {
-    margin-top: 1em;
-    padding: 0.5em 1em;
-    background-color: #c0392b;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+  margin-top: 1em;
+  padding: 0.5em 1em;
+  background-color: #c0392b;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
 button:hover {
-    background-color: #a93226;
+  background-color: #a93226;
 }
 
 pre {
-    text-align: left;
-    background-color: #f4f4f4;
-    padding: 1em;
-    margin-top: 1em;
-    overflow-x: auto;
-    max-height: 400px;
-    border: 1px solid #ddd;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    font-size: 0.9em;
+  text-align: left;
+  background-color: #f4f4f4;
+  padding: 1em;
+  margin-top: 1em;
+  overflow-x: auto;
+  max-height: 400px;
+  border: 1px solid #ddd;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-size: 0.9em;
+}
+
+.container form[action="/entries"],
+.container form[action="/"] {
+  display: inline-block;
+  margin-bottom: 1em;
+}
+
+label[for$="building-select"] {
+  margin-right: 0.5em;
 }
