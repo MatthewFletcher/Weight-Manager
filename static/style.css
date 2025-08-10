@@ -460,3 +460,19 @@ label[for$="entries-building-select"] {
   color: #666;
   font-size: 0.9rem;
 }
+
+
+#password-container .inline-form {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5em; /* spacing between input and button */
+}
+
+#password-container input[type="password"] {
+  padding: 0.4em;
+  font-size: 1em;
+  width: 200px; /* adjust to taste */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
