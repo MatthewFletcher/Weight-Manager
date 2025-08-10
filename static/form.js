@@ -142,7 +142,6 @@ function setupBuildingCreator(selectId, inputId) {
   if (!sel || !input) return;
 
   function toggle() {
-    alert("Toggle activated")
     const isNew = sel.value === "__new__";
     input.style.display = isNew ? "inline-block" : "none";
     if (isNew) input.focus();
