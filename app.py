@@ -99,9 +99,15 @@ async def add_entry(
     room: Optional[str] = Form(None),
     admission_date: str = Form(...),
     weight: float = Form(...),
-    building: Optional[str] = Form(None),
+    building_select: Optional[str] = Form(None),
+    building_new: Optional[str] = Form(None),
 ):
-    building_val = (building or "").strip() or "Unassigned"
+    # decide final building value
+    if building_select == "__new__":
+        building_val = (building_new or "").strip() or "Unassigned"
+    else:
+        building_val = (building_select or "").strip() or "Unassigned"
+
     room_val = (room or "").strip()
     h = entry_hash(name, room_val, building_val)
 
@@ -123,7 +129,6 @@ async def add_entry(
         )
     conn.commit()
     conn.close()
-    # keep the building in the redirect so the form stays on that building
     return RedirectResponse(f"/?building={building_val}", status_code=303)
 
 

@@ -338,3 +338,48 @@ pre {
 label[for$="building-select"] {
   margin-right: 0.5em;
 }
+
+/* Building filter form styling */
+#building-filter-form,
+#entries-building-filter-form {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-bottom: 1em;
+}
+
+#building-filter-form label,
+#entries-building-filter-form label {
+  font-weight: bold;
+}
+
+#building-filter-form select,
+#entries-building-filter-form select {
+  padding: 0.3em 0.6em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+#building-new-filter,
+#entries-building-new-filter {
+  min-width: 14ch;
+  padding: 0.3em 0.6em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Optional: Match button styles if you add a submit button */
+#building-filter-form button,
+#entries-building-filter-form button {
+  padding: 0.4em 0.8em;
+  background-color: #c0392b;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#building-filter-form button:hover,
+#entries-building-filter-form button:hover {
+  background-color: #a93226;
+}
