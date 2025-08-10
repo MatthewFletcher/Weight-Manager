@@ -1,0 +1,22 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ title or "Weight Tracker" }}</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header>
+        <h1>Weight Tracker</h1>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer style="margin-top:2em; padding-top:1em; border-top:1px solid #ccc;">
+        <a href="/admin">Admin Panel</a>
+    </footer>
+</body>
+</html>
