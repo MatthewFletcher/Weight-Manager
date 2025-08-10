@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <!-- HTMX via CDN -->
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <script src="/static/form.js"></script>
+</head>
+<body>
+  <div class="container" style="max-width: 1000px; margin: 0 auto; text-align: left;">
+    <h2 style="text-align:center;">Admin</h2>
+
+    <!-- Buildings -->
+    <section class="admin-card">
+      <h3>Buildings</h3>
+      <form action="/admin/buildings/add" method="post" class="inline-form">
+        <label for="building-add">Add new:</label>
+        <input id="building-add" name="name" type="text" placeholder="e.g., East Wing" required>
+        <button type="submit">Add</button>
+      </form>
+
+      <div class="grid-2">
+        <div>
+          <h4>Rename</h4>
+          <form action="/admin/buildings/rename" method="post" class="inline-form">
+            <select name="old_name" required>
+              {% for b in buildings %}
+                <option value="{{ b }}">{{ b }} ({{ counts.get(b, 0) }})</option>
+              {% endfor %}
+            </select>
+            <span>→</span>
+            <input name="new_name" type="text" placeholder="New name" required>
+            <button type="submit">Rename</button>
+          </form>
+        </div>
+
+        <div>
+          <h4>Merge</h4>
+          <form action="/admin/buildings/merge" method="post" class="inline-form">
+            <label>From</label>
+            <select name="source" required>
+              {% for b in buildings %}
+                <option value="{{ b }}">{{ b }} ({{ counts.get(b, 0) }})</option>
+              {% endfor %}
+            </select>
+            <label>into</label>
+            <select name="target" required>
+              {% for b in buildings %}
+                <option value="{{ b }}">{{ b }} ({{ counts.get(b, 0) }})</option>
+              {% endfor %}
+            </select>
+            <button type="submit">Merge</button>
+          </form>
+        </div>
+      </div>
+
+      <h4>Delete</h4>
+      <form action="/admin/buildings/delete" method="post" class="inline-form" onsubmit="return confirmDeleteBuilding(this);">
+        <select name="name" required>
+          {% for b in buildings %}
+            <option value="{{ b }}">{{ b }} ({{ counts.get(b, 0) }})</option>
+          {% endfor %}
+        </select>
+        <span>reassign to</span>
+        <select name="reassign_to">
+          <option value="">(none)</option>
+          {% for b in buildings %}
+            <option value="{{ b }}">{{ b }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="danger">Delete</button>
+      </form>
+    </section>
+
+    <!-- Export / Import -->
+    <section class="admin-card">
+      <h3>Export / Import</h3>
+      <div class="inline-form">
+        <a class="button-like" href="/admin/export">Download Export (JSON)</a>
+      </div>
+      <form action="/admin/import" method="post" enctype="multipart/form-data" class="inline-form">
+        <input type="file" name="file" accept="application/json" required>
+        <button type="submit">Import JSON</button>
+      </form>
+      <p class="muted">Import merges: adds buildings; upserts entries by hash.</p>
+    </section>
+
+    <!-- Maintenance -->
+    <section class="admin-card">
+      <h3>Maintenance</h3>
+      <form action="/admin/recalc-hashes" method="post" onsubmit="return confirm('Recalculate all entry hashes now?');">
+        <button type="submit">Recalculate Hashes</button>
+      </form>
+      <p class="muted">Rebuilds hashes from name/room/building with collision protection.</p>
+    </section>
+
+    <div class="nav-links" style="text-align:center;">
+      <a href="/">Back to form</a> |
+      <a href="/entries">All Entries</a>
+    </div>
+  </div>
+
+  <script>
+    function confirmDeleteBuilding(form) {
+      const name = form.name.value;
+      const reassign = form.reassign_to.value;
+      return confirm(
+        reassign
+          ? `Delete "${name}" and reassign its entries to "${reassign}"?`
+          : `Delete "${name}" with NO reassignment? Any entries in this building will block deletion.\n\nProceed?`
+      );
+    }
+  </script>
+</body>
+</html>

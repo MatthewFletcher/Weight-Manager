@@ -40,6 +40,24 @@ def entry_hash(name: str, room: Optional[str], building: Optional[str]) -> str:
     return hashlib.sha256(key.encode()).hexdigest()[:12]
 
 
+from fastapi import UploadFile, File, Form
+import json
+
+def count_entries_by_building():
+    conn = sqlite3.connect(DATABASE)
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT COALESCE(NULLIF(building,''), 'Unassigned') AS b, COUNT(*)
+        FROM entries
+        GROUP BY b
+        ORDER BY b COLLATE NOCASE
+    """)
+    rows = cur.fetchall()
+    conn.close()
+    return rows  # list[(building, count)]
+
+
+
 # Initialize database (with new schema)
 def init_db():
     conn = sqlite3.connect(DATABASE)
@@ -112,6 +130,201 @@ def ensure_building_exists(name: str) -> str:
     conn.commit()
     conn.close()
     return val
+
+
+
+@app.get("/admin", response_class=HTMLResponse)
+async def admin(request: Request):
+    buildings = get_building_options()  # from earlier step
+    counts = dict(count_entries_by_building())
+    return templates.TemplateResponse(
+        "admin.html",
+        {
+            "request": request,
+            "buildings": buildings,
+            "counts": counts,
+        },
+    )
+
+# --- Buildings CRUD-ish ---
+@app.post("/admin/buildings/add")
+async def admin_building_add(name: str = Form(...)):
+    name = (name or "").strip() or "Unassigned"
+    ensure_building_exists(name)
+    return RedirectResponse("/admin", status_code=303)
+
+@app.post("/admin/buildings/rename")
+async def admin_building_rename(old_name: str = Form(...), new_name: str = Form(...)):
+    old = (old_name or "").strip()
+    new = (new_name or "").strip()
+    if not old or not new:
+        return RedirectResponse("/admin", status_code=303)
+
+    conn = sqlite3.connect(DATABASE)
+    cur = conn.cursor()
+    # Move entries
+    cur.execute("""
+        UPDATE entries
+        SET building = ?
+        WHERE COALESCE(NULLIF(building,''), 'Unassigned') = ?
+    """, (new, old))
+    # Update buildings table
+    cur.execute("INSERT OR IGNORE INTO buildings(name) VALUES (?)", (new,))
+    cur.execute("DELETE FROM buildings WHERE name = ?", (old,))
+    conn.commit()
+    conn.close()
+    return RedirectResponse("/admin", status_code=303)
+
+@app.post("/admin/buildings/merge")
+async def admin_building_merge(source: str = Form(...), target: str = Form(...)):
+    src = (source or "").strip()
+    tgt = (target or "").strip()
+    if not src or not tgt or src == tgt:
+        return RedirectResponse("/admin", status_code=303)
+
+    conn = sqlite3.connect(DATABASE)
+    cur = conn.cursor()
+    cur.execute("""
+        UPDATE entries
+        SET building = ?
+        WHERE COALESCE(NULLIF(building,''), 'Unassigned') = ?
+    """, (tgt, src))
+    cur.execute("INSERT OR IGNORE INTO buildings(name) VALUES (?)", (tgt,))
+    cur.execute("DELETE FROM buildings WHERE name = ?", (src,))
+    conn.commit()
+    conn.close()
+    return RedirectResponse("/admin", status_code=303)
+
+@app.post("/admin/buildings/delete")
+async def admin_building_delete(name: str = Form(...), reassign_to: str = Form(None)):
+    name = (name or "").strip()
+    reassign = (reassign_to or "").strip()
+
+    conn = sqlite3.connect(DATABASE)
+    cur = conn.cursor()
+
+    # How many entries use this building?
+    cur.execute("""
+        SELECT COUNT(*) FROM entries
+        WHERE COALESCE(NULLIF(building,''), 'Unassigned') = ?
+    """, (name,))
+    count = cur.fetchone()[0]
+
+    if count and not reassign:
+        # If entries exist and no reassign provided, just bail safely
+        conn.close()
+        # Could show a flash message; for now just reload
+        return RedirectResponse("/admin", status_code=303)
+
+    if count and reassign:
+        cur.execute("""
+            UPDATE entries SET building = ?
+            WHERE COALESCE(NULLIF(building,''), 'Unassigned') = ?
+        """, (reassign, name))
+
+    cur.execute("DELETE FROM buildings WHERE name = ?", (name,))
+    conn.commit()
+    conn.close()
+    return RedirectResponse("/admin", status_code=303)
+
+# --- Export / Import ---
+@app.get("/admin/export")
+async def admin_export():
+    # Export buildings + entries as a JSON file
+    conn = sqlite3.connect(DATABASE)
+    cur = conn.cursor()
+    cur.execute("SELECT name FROM buildings ORDER BY name")
+    buildings = [r[0] for r in cur.fetchall()]
+    cur.execute("SELECT hash, name, room, weights, admission_date, COALESCE(NULLIF(building,''), 'Unassigned') FROM entries")
+    entries = [
+        {
+            "hash": h, "name": n, "room": r, "weights": w,
+            "admission_date": d, "building": b
+        }
+        for (h, n, r, w, d, b) in cur.fetchall()
+    ]
+    conn.close()
+
+    payload = {"buildings": buildings, "entries": entries}
+    tmp = os.path.join(BASE_DIR, "data", "export.json")
+    os.makedirs(os.path.dirname(tmp), exist_ok=True)
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2)
+
+    return FileResponse(tmp, media_type="application/json", filename="weights_export.json")
+
+@app.post("/admin/import")
+async def admin_import(file: UploadFile = File(...)):
+    # Merge import: adds buildings; upserts or inserts entries
+    data = json.loads((await file.read()).decode("utf-8"))
+    buildings = data.get("buildings", [])
+    entries = data.get("entries", [])
+
+    conn = sqlite3.connect(DATABASE)
+    cur = conn.cursor()
+
+    for b in buildings:
+        cur.execute("INSERT OR IGNORE INTO buildings(name) VALUES (?)", (b.strip() or "Unassigned",))
+
+    for e in entries:
+        h = e.get("hash")
+        name = e.get("name")
+        room = e.get("room")
+        weights = e.get("weights", "")
+        admission_date = e.get("admission_date")
+        building = (e.get("building") or "Unassigned").strip() or "Unassigned"
+
+        # Upsert by hash (if hash collides, we overwrite the row for simplicity)
+        cur.execute("SELECT 1 FROM entries WHERE hash=?", (h,))
+        if cur.fetchone():
+            cur.execute("""
+                UPDATE entries
+                SET name=?, room=?, weights=?, admission_date=?, building=?
+                WHERE hash=?
+            """, (name, room, weights, admission_date, building, h))
+        else:
+            cur.execute("""
+                INSERT INTO entries(hash, name, room, weights, admission_date, building)
+                VALUES(?, ?, ?, ?, ?, ?)
+            """, (h, name, room, weights, admission_date, building))
+
+    conn.commit()
+    conn.close()
+    return RedirectResponse("/admin", status_code=303)
+
+# --- Maintenance tools ---
+@app.post("/admin/recalc-hashes")
+async def admin_recalc_hashes():
+    conn = sqlite3.connect(DATABASE)
+    cur = conn.cursor()
+    cur.execute("SELECT rowid, name, room, COALESCE(NULLIF(building,''),'Unassigned') FROM entries")
+    rows = cur.fetchall()
+    existing = set()
+    cur.execute("SELECT hash FROM entries")
+    existing |= {r[0] for r in cur.fetchall()}
+
+    def _hash(n, r, b, salt=0):
+        base = f"{(n or '').strip()}::{(r or '').strip() or 'N/A'}::{(b or '').strip() or 'Unassigned'}"
+        if salt:
+            base += f"::salt{salt}"
+        return hashlib.sha256(base.encode()).hexdigest()[:12]
+
+    updates = []
+    for rowid, name, room, building in rows:
+        salt = 0
+        newh = _hash(name, room, building, salt)
+        while newh in existing:
+            salt += 1
+            newh = _hash(name, room, building, salt)
+        existing.add(newh)
+        updates.append((newh, rowid))
+
+    for newh, rid in updates:
+        cur.execute("UPDATE entries SET hash=? WHERE rowid=?", (newh, rid))
+
+    conn.commit()
+    conn.close()
+    return RedirectResponse("/admin", status_code=303)
 
 
 
