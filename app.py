@@ -447,7 +447,7 @@ async def entries(request: Request, building: Optional[str] = None):
             try:
                 # if it's a string like '2025-08-10'
                 date_obj = datetime.strptime(admission_date, "%Y-%m-%d")
-                formatted_date = date_obj.strftime("%B %d")  # 'August 10'
+                formatted_date = date_obj.strftime("%B %-d")  # 'August 10'
             except ValueError:
                 # if already datetime or wrong format, just leave as-is
                 formatted_date = admission_date
@@ -515,7 +515,7 @@ async def generate_report(building: Optional[str] = None):
     pdf.add_page()
     pdf.set_font("Arial", "B", 14)
     scope = f" — {selected}" if selected else ""
-    report_title = f"Weight Report{scope} — Generated {datetime.now().strftime('%B %d, %Y')}"
+    report_title = f"Weight Report{scope} — Generated {datetime.now().strftime('%B %-d, %Y')}"
     pdf.cell(0, 10, report_title, ln=True, align="C")
 
     col_widths = {"name": 50, "room": 30, "admission_date": 40, "last_weight": 30, "weights": 40}
